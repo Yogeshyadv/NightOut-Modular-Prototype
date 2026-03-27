@@ -10,6 +10,7 @@ import { GlassCard } from '../../components/common/GlassCard';
 import { Avatar } from '../../components/common/Avatar';
 import { EmptyState } from '../../components/common/EmptyState';
 import { SearchBar } from '../../components/common/SearchBar';
+import { MobileAppHeader, BottomNav } from '../../components/common/MobileAppLayout';
 
 export const AdminDashboard = () => {
   const [panel, setPanel] = useState("superdash");
@@ -21,52 +22,55 @@ export const AdminDashboard = () => {
   };
 
   const navSections = [
-    { section: "Overview", items: [["superdash", "⚡", "Super Dashboard"], ["activity", "📡", "Activity Feed"]] },
-    { section: "Management", items: [["vendors", "🏪", "Vendor Management"], ["users", "👥", "User Management"], ["oversight", "📋", "Booking Oversight"], ["venues", "🏢", "Venue Moderation"]] },
-    { section: "Finance", items: [["revenue", "💰", "Revenue Analytics"], ["commission", "💼", "Commission Tracking"]] },
-    { section: "Platform", items: [["moderation", "🛡", "Content Moderation"], ["settings", "⚙", "Platform Settings"]] },
+    { section: "Overview", items: [["superdash", "⚡", "Super Dashboard"], ["activity", "📡", "Activity"]] },
+    { section: "Management", items: [["vendors", "🏪", "Vendors"], ["users", "👥", "Users"], ["oversight", "📋", "Oversight"], ["venues", "🏢", "Venues"]] },
+    { section: "Platform", items: [["settings", "⚙", "Settings"]] },
+  ];
+
+  const bottomNavItems = [
+    ["superdash", "⚡", "Dashboard"],
+    ["activity", "📡", "Activity"],
+    ["vendors", "🏪", "Vendors"],
+    ["users", "👥", "Users"],
+    ["settings", "⚙", "Settings"],
   ];
 
   // Super Dashboard
   const SuperDashPanel = () => (
     <div className="fade-up">
-      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 28 }}>
+      <div className="flex-stack" style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 28, gap: 18 }}>
         <div>
-          <div style={{ fontFamily: T.font2, fontSize: 26, fontWeight: 700, marginBottom: 4 }}>Super Dashboard</div>
-          <div style={{ fontSize: 14, color: T.t3 }}>Platform overview · Tuesday, 25 March 2026</div>
+          <div style={{ fontFamily: T.font2, fontSize: "clamp(22px, 6vw, 26px)", fontWeight: 700, marginBottom: 4 }}>Super Dashboard</div>
+          <div style={{ fontSize: 13, color: T.t3 }}>Platform overview · 25 March 2026</div>
         </div>
-        <div style={{ display: "flex", gap: 10 }}><Btn variant="ghost" sm>Export Report</Btn><Btn variant="purple" sm>Platform Broadcast</Btn></div>
+        <div className="stack-buttons" style={{ display: "flex", gap: 10, flexWrap: "wrap", width: '100%', maxWidth: 400 }}><Btn variant="ghost" sm>Export Report</Btn><Btn variant="purple" sm>Platform Broadcast</Btn></div>
       </div>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 18, marginBottom: 24 }}>
-        <KpiCard icon="👥" label="Total Users" value="12,847" change="+18% this month" accentColor={T.cyan} />
-        <KpiCard icon="🏪" label="Active Vendors" value={vendors.filter(v => v.status === "Active").length.toString()} change="+2 pending review" accentColor={T.purple} />
-        <KpiCard icon="🎟️" label="Total Bookings" value="84,291" change="+23% MoM" accentColor={T.green} />
-        <KpiCard icon="💰" label="Platform Revenue" value="₹4.8Cr" change="+31% MoM" accentColor={T.gold} />
+      
+      {/* KPI Section */}
+      <div className="grid-2" style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 14, marginBottom: 18 }}>
+        <KpiCard icon="👥" label="Total Users" value="12,847" change="+18%" accentColor={T.cyan} />
+        <KpiCard icon="🏪" label="Active Vendors" value={vendors.filter(v => v.status === "Active").length.toString()} change="+2 review" accentColor={T.purple} />
+        <KpiCard icon="🎟️" label="Total Bookings" value="84,291" change="+23%" accentColor={T.green} />
+        <KpiCard icon="💰" label="Platform Revenue" value="₹4.8Cr" change="+31%" accentColor={T.gold} />
       </div>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 18, marginBottom: 28 }}>
-        <KpiCard icon="🏢" label="Total Venues" value={venues.length.toString()} change="5 active" changeUp={true} accentColor={T.green} />
-        <KpiCard icon="📊" label="Commission Earned" value="₹24L" change="+18%" accentColor={T.gold} />
-        <KpiCard icon="⭐" label="Platform Rating" value="4.6" change="+0.1 this month" accentColor={T.gold} />
-        <KpiCard icon="🚨" label="Open Complaints" value="3" change="Action needed" changeUp={false} accentColor={T.red} />
-      </div>
-      <div style={{ display: "grid", gridTemplateColumns: "1.5fr 1fr", gap: 20, marginBottom: 24 }}>
+      
+      <div className="grid-1" style={{ display: "grid", gridTemplateColumns: "1.5fr 1fr", gap: 20, marginBottom: 24 }}>
         <GlassCard>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
-            <div><div style={{ fontFamily: T.font2, fontSize: 15, fontWeight: 700, marginBottom: 3 }}>Platform Revenue (Daily)</div><div style={{ fontSize: 12, color: T.t3 }}>Last 30 days · ₹L</div></div>
+          <div className="flex-stack" style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
+            <div><div style={{ fontFamily: T.font2, fontSize: 15, fontWeight: 700, marginBottom: 3 }}>Platform Revenue (Daily)</div><div style={{ fontSize: 12, color: T.t3 }}>Last 30 Days trend (₹L)</div></div>
             <div style={{ display: "flex", gap: 4 }}>
               {["30D", "7D", "MTD"].map(p => <button key={p} style={{ padding: "4px 10px", borderRadius: 6, fontSize: 11, fontWeight: 600, color: p === "30D" ? T.purple2 : T.t3, background: p === "30D" ? T.purpleGlow : "transparent", border: `1px solid ${p === "30D" ? T.purple : T.border}`, cursor: "pointer" }}>{p}</button>)}
             </div>
           </div>
           <BarChart data={analyticsData.revenueDaily.slice(-14)} labels={[]} primaryColor={T.purple} secondaryColor={T.purple2} height={140} />
         </GlassCard>
+        
         <GlassCard>
           <div style={{ fontFamily: T.font2, fontSize: 15, fontWeight: 700, marginBottom: 16 }}>Platform Health</div>
           {[
-            { label: "Vendor Activation Rate", val: 75, color: T.green },
+            { label: "Vendor Activation", val: 75, color: T.green },
             { label: "Booking Completion", val: 91, color: T.cyan },
-            { label: "User Retention", val: 68, color: T.purple2 },
             { label: "Payment Success", val: 97, color: T.green },
-            { label: "Review Rate", val: 44, color: T.gold },
           ].map(({ label, val, color }) => (
             <div key={label} style={{ marginBottom: 14 }}>
               <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, marginBottom: 5 }}>
@@ -80,10 +84,23 @@ export const AdminDashboard = () => {
           ))}
         </GlassCard>
       </div>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
+
+      <div className="grid-1" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
         <GlassCard style={{ padding: 0, overflow: "hidden" }}>
           <div style={{ padding: "18px 22px", borderBottom: `1px solid ${T.border}` }}><div style={{ fontFamily: T.font2, fontSize: 15, fontWeight: 700 }}>Top Performing Venues</div></div>
-          <table>
+          
+          {/* Mobile View Cards */}
+          <div className="mobile-only" style={{ padding: 12 }}>
+            {analyticsData.topVenues.slice(0, 3).map((v, i) => (
+              <div key={v.name} className="mobile-table-card">
+                <div className="row"><strong>#{i + 1} {v.name}</strong> <span style={{ color: T.green }}>{v.revenue}</span></div>
+                <div className="row"><span className="label">Bookings</span> <span>{v.bookings}</span></div>
+                <div className="row"><span className="label">City</span> <span>{v.city}</span></div>
+              </div>
+            ))}
+          </div>
+
+          <table className="hide-on-mobile">
             <thead><tr><th>#</th><th>Venue</th><th>Revenue</th><th>Bookings</th><th>Trend</th></tr></thead>
             <tbody>
               {analyticsData.topVenues.map((v, i) => (
@@ -98,13 +115,14 @@ export const AdminDashboard = () => {
             </tbody>
           </table>
         </GlassCard>
+
         <GlassCard>
           <div style={{ fontFamily: T.font2, fontSize: 15, fontWeight: 700, marginBottom: 16 }}>Bookings by City</div>
-          {[["Jaipur", "3,842", 78], ["Delhi", "1,241", 25], ["Mumbai", "891", 18], ["Bengaluru", "421", 9], ["Chennai", "187", 4]].map(([city, bks, pct]) => (
+          {[["Jaipur", "3,842", 78], ["Delhi", "1,241", 25], ["Mumbai", "891", 18]].map(([city, bks, pct]) => (
             <div key={city} style={{ marginBottom: 14 }}>
               <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, marginBottom: 5 }}>
                 <span style={{ fontWeight: 600 }}>{city}</span>
-                <span style={{ color: T.t2 }}>{bks} bookings</span>
+                <span style={{ color: T.t2 }}>{bks}</span>
               </div>
               <div style={{ height: 6, background: "rgba(255,255,255,0.06)", borderRadius: 4, overflow: "hidden" }}>
                 <div style={{ width: `${pct}%`, height: "100%", background: `linear-gradient(to right,${T.green},${T.green2})`, borderRadius: 4 }} />
@@ -144,49 +162,59 @@ export const AdminDashboard = () => {
     const filtered = vendors.filter(v => (search === "" || v.name.toLowerCase().includes(search.toLowerCase())) && (statusFilter === "All" || v.status === statusFilter));
     return (
       <div className="fade-up">
-        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 28 }}>
-          <div><div style={{ fontFamily: T.font2, fontSize: 26, fontWeight: 700, marginBottom: 4 }}>Vendor Management</div><div style={{ fontSize: 14, color: T.t3 }}>{vendors.length} vendors · {vendors.filter(v => v.status === "Pending").length} pending approval</div></div>
+        <div className="flex-stack" style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 28 }}>
+          <div><div style={{ fontFamily: T.font2, fontSize: "clamp(22px, 6vw, 26px)", fontWeight: 700, marginBottom: 4 }}>Vendor Manager</div><div style={{ fontSize: 13, color: T.t3 }}>{vendors.length} vendors total</div></div>
+          <Btn variant="ghost" sm>Export</Btn>
         </div>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 16, marginBottom: 24 }}>
-          {[["All", vendors.length, T.t2], ["Active", vendors.filter(v => v.status === "Active").length, T.green], ["Pending", vendors.filter(v => v.status === "Pending").length, T.gold], ["Blocked", vendors.filter(v => v.status === "Blocked").length, T.red]].map(([l, c, col]) => (
-            <div key={l} className="glass hover-card" onClick={() => setStatusFilter(l)} style={{ borderRadius: T.rlg, padding: "16px 20px", cursor: "pointer", border: `1px solid ${statusFilter === l ? col : T.border}` }}>
-              <div style={{ fontFamily: T.font2, fontSize: 24, fontWeight: 800, color: col, marginBottom: 4 }}>{c}</div>
-              <div style={{ fontSize: 12, color: T.t3 }}>{l} Vendors</div>
-            </div>
+        
+        <div className="hscroll" style={{ marginBottom: 24 }}>
+          {["All", "Active", "Pending", "Blocked"].map(l => (
+            <button key={l} onClick={() => setStatusFilter(l)} style={{ padding: "8px 16px", borderRadius: 20, fontSize: 12, fontWeight: 700, color: statusFilter === l ? T.gold : T.t3, background: statusFilter === l ? "rgba(255,215,64,0.1)" : T.glass, border: `1px solid ${statusFilter === l ? T.gold : T.border}`, cursor: "pointer", whiteSpace: 'nowrap' }}>{l}</button>
           ))}
         </div>
+
         <GlassCard style={{ padding: 0, overflow: "hidden" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "18px 22px", borderBottom: `1px solid ${T.border}`, gap: 14 }}>
-            <div style={{ fontFamily: T.font2, fontSize: 15, fontWeight: 700 }}>All Vendors</div>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "18px 22px", borderBottom: `1px solid ${T.border}`, gap: 12 }}>
             <SearchBar value={search} onChange={setSearch} placeholder="Search vendors..." />
           </div>
-          {filtered.length === 0 ? <EmptyState icon="🏪" title="No vendors found" sub={`No vendors match "${search}"`} /> : (
-            <table>
-              <thead><tr><th>Vendor</th><th>City</th><th>Venues</th><th>Bookings</th><th>Revenue</th><th>Rating</th><th>Status</th><th>Actions</th></tr></thead>
-              <tbody>
-                {filtered.map(v => (
-                  <tr key={v.id}>
-                    <td><strong>{v.name}</strong><div style={{ fontSize: 11, color: T.t3 }}>{v.owner} · {v.email}</div></td>
-                    <td>{v.city}</td>
-                    <td style={{ fontWeight: 600 }}>{v.venues}</td>
-                    <td style={{ fontWeight: 600 }}>{v.totalBookings.toLocaleString()}</td>
-                    <td style={{ color: T.green, fontWeight: 700 }}>{v.revenue ? `₹${(v.revenue / 100000).toFixed(1)}L` : "—"}</td>
-                    <td>{v.rating ? `⭐ ${v.rating}` : "—"}</td>
-                    <td><Pill status={v.status} /></td>
-                    <td>
-                      <div style={{ display: "flex", gap: 6 }}>
-                        {v.status === "Pending" && <button onClick={() => showToast(`${v.name} approved!`)} style={{ padding: "4px 10px", borderRadius: 6, fontSize: 11, fontWeight: 700, border: `1px solid ${T.green}`, background: "transparent", color: T.green, cursor: "pointer", fontFamily: T.font }}>Approve</button>}
-                        {v.status === "Active" && <button onClick={() => showToast(`${v.name} blocked.`, T.red)} style={{ padding: "4px 10px", borderRadius: 6, fontSize: 11, fontWeight: 700, border: `1px solid ${T.red}`, background: "transparent", color: T.red, cursor: "pointer", fontFamily: T.font }}>Block</button>}
-                        {v.status === "Blocked" && <button onClick={() => showToast(`${v.name} unblocked.`)} style={{ padding: "4px 10px", borderRadius: 6, fontSize: 11, fontWeight: 700, border: `1px solid ${T.green}`, background: "transparent", color: T.green, cursor: "pointer", fontFamily: T.font }}>Unblock</button>}
-                        {v.status === "Pending" && <button onClick={() => showToast(`${v.name} rejected.`, T.red)} style={{ padding: "4px 10px", borderRadius: 6, fontSize: 11, fontWeight: 700, border: `1px solid ${T.red}`, background: "transparent", color: T.red, cursor: "pointer", fontFamily: T.font }}>Reject</button>}
-                        <button style={{ padding: "4px 10px", borderRadius: 6, fontSize: 11, fontWeight: 700, border: `1px solid ${T.border}`, background: "transparent", color: T.t2, cursor: "pointer", fontFamily: T.font }}>View</button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
+
+          <div className="mobile-only" style={{ padding: 12 }}>
+            {filtered.slice(0, 5).map(v => (
+              <div key={v.id} className="mobile-table-card">
+                <div className="row"><strong>{v.name}</strong> <Pill status={v.status} /></div>
+                <div className="row"><span className="label">Owner</span> <span>{v.owner}</span></div>
+                <div className="row"><span className="label">Bookings</span> <span>{v.totalBookings.toLocaleString()}</span></div>
+                <div className="row"><span className="label">Revenue</span> <span style={{ color: T.green }}>₹{(v.revenue / 100000).toFixed(1)}L</span></div>
+                <div style={{ display: 'flex', gap: 6, marginTop: 10 }}>
+                  <button style={{ flex: 1, padding: '8px', borderRadius: 8, background: T.glass, border: `1px solid ${T.border}`, fontSize: 11, fontWeight: 700, color: T.t2 }}>View</button>
+                  {v.status === "Pending" && <button style={{ flex: 1.5, padding: '8px', borderRadius: 8, background: T.greenGlow, border: `1px solid ${T.green}`, fontSize: 11, fontWeight: 700, color: T.green }}>Approve</button>}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <table className="hide-on-mobile">
+            <thead><tr><th>Vendor</th><th>City</th><th>Venues</th><th>Bookings</th><th>Revenue</th><th>Rating</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody>
+              {filtered.map(v => (
+                <tr key={v.id}>
+                  <td><strong>{v.name}</strong><div style={{ fontSize: 11, color: T.t3 }}>{v.owner} · {v.email}</div></td>
+                  <td>{v.city}</td>
+                  <td style={{ fontWeight: 600 }}>{v.venues}</td>
+                  <td style={{ fontWeight: 600 }}>{v.totalBookings.toLocaleString()}</td>
+                  <td style={{ color: T.green, fontWeight: 700 }}>{v.revenue ? `₹${(v.revenue / 100000).toFixed(1)}L` : "—"}</td>
+                  <td>{v.rating ? `⭐ ${v.rating}` : "—"}</td>
+                  <td><Pill status={v.status} /></td>
+                  <td>
+                    <div style={{ display: "flex", gap: 6 }}>
+                      {v.status === "Pending" && <button onClick={() => showToast(`${v.name} approved!`)} style={{ padding: "4px 10px", borderRadius: 6, fontSize: 11, fontWeight: 700, border: `1px solid ${T.green}`, background: "transparent", color: T.green, cursor: "pointer", fontFamily: T.font }}>Approve</button>}
+                      <button style={{ padding: "4px 10px", borderRadius: 6, fontSize: 11, fontWeight: 700, border: `1px solid ${T.border}`, background: "transparent", color: T.t2, cursor: "pointer", fontFamily: T.font }}>View</button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </GlassCard>
       </div>
     );
@@ -199,53 +227,56 @@ export const AdminDashboard = () => {
     const filtered = users.filter(u => (search === "" || u.name.toLowerCase().includes(search.toLowerCase()) || u.phone.includes(search)) && (statusFilter === "All" || u.status === statusFilter));
     return (
       <div className="fade-up">
-        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 28 }}>
-          <div><div style={{ fontFamily: T.font2, fontSize: 26, fontWeight: 700, marginBottom: 4 }}>User Management</div><div style={{ fontSize: 14, color: T.t3 }}>{users.length} users registered</div></div>
-          <Btn variant="ghost" sm>Export CSV</Btn>
+        <div className="flex-stack" style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 28 }}>
+          <div><div style={{ fontFamily: T.font2, fontSize: "clamp(22px, 6vw, 26px)", fontWeight: 700, marginBottom: 4 }}>User Manager</div><div style={{ fontSize: 13, color: T.t3 }}>{users.length} registered</div></div>
+          <Btn variant="ghost" sm>Export</Btn>
         </div>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 16, marginBottom: 24 }}>
-          {[["All", users.length, T.t2], ["Active", users.filter(u => u.status === "Active").length, T.green], ["Flagged", users.filter(u => u.status === "Flagged").length, T.orange], ["Blocked", users.filter(u => u.status === "Blocked").length, T.red]].map(([l, c, col]) => (
-            <div key={l} className="glass hover-card" onClick={() => setStatusFilter(l)} style={{ borderRadius: T.rlg, padding: "16px 20px", cursor: "pointer", border: `1px solid ${statusFilter === l ? col : T.border}` }}>
-              <div style={{ fontFamily: T.font2, fontSize: 24, fontWeight: 800, color: col, marginBottom: 4 }}>{c}</div>
-              <div style={{ fontSize: 12, color: T.t3 }}>{l} Users</div>
-            </div>
+        
+        <div className="hscroll" style={{ marginBottom: 20 }}>
+          {["All", "Active", "Flagged", "Blocked"].map(l => (
+            <button key={l} onClick={() => setStatusFilter(l)} style={{ padding: "8px 16px", borderRadius: 20, fontSize: 12, fontWeight: 700, color: statusFilter === l ? T.purple2 : T.t3, background: statusFilter === l ? T.purpleGlow : T.glass, border: `1px solid ${statusFilter === l ? T.purple : T.border}`, cursor: "pointer", whiteSpace: 'nowrap' }}>{l}</button>
           ))}
         </div>
+
         <GlassCard style={{ padding: 0, overflow: "hidden" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "18px 22px", borderBottom: `1px solid ${T.border}`, gap: 14 }}>
-            <div style={{ fontFamily: T.font2, fontSize: 15, fontWeight: 700 }}>All Users</div>
-            <SearchBar value={search} onChange={setSearch} placeholder="Search by name or phone..." />
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "18px 22px", borderBottom: `1px solid ${T.border}`, gap: 12 }}>
+            <SearchBar value={search} onChange={setSearch} placeholder="Search users..." />
           </div>
-          {filtered.length === 0 ? <EmptyState icon="👥" title="No users found" /> : (
-            <table>
-              <thead><tr><th>User</th><th>City</th><th>Joined</th><th>Bookings</th><th>Spent</th><th>Status</th><th>Actions</th></tr></thead>
-              <tbody>
-                {filtered.map(u => (
-                  <tr key={u.id}>
-                    <td>
-                      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                        <Avatar name={u.name} size={32} color={u.status === "Blocked" ? T.red : u.status === "Flagged" ? T.orange : T.green} />
-                        <div><strong>{u.name}</strong><div style={{ fontSize: 11, color: T.t3 }}>{u.phone}</div></div>
-                      </div>
-                    </td>
-                    <td>{u.city}</td>
-                    <td style={{ color: T.t3 }}>{u.joined}</td>
-                    <td style={{ fontWeight: 700 }}>{u.bookings}</td>
-                    <td style={{ color: T.green, fontWeight: 700 }}>₹{u.spent.toLocaleString()}</td>
-                    <td><Pill status={u.status} /></td>
-                    <td>
-                      <div style={{ display: "flex", gap: 6 }}>
-                        {u.status === "Active" && <button onClick={() => showToast(`${u.name} flagged for review.`, T.orange)} style={{ padding: "4px 10px", borderRadius: 6, fontSize: 11, fontWeight: 700, border: `1px solid ${T.orange}`, background: "transparent", color: T.orange, cursor: "pointer", fontFamily: T.font }}>Flag</button>}
-                        {u.status !== "Blocked" && <button onClick={() => showToast(`${u.name} blocked.`, T.red)} style={{ padding: "4px 10px", borderRadius: 6, fontSize: 11, fontWeight: 700, border: `1px solid ${T.red}`, background: "transparent", color: T.red, cursor: "pointer", fontFamily: T.font }}>Block</button>}
-                        {u.status === "Blocked" && <button onClick={() => showToast(`${u.name} unblocked.`)} style={{ padding: "4px 10px", borderRadius: 6, fontSize: 11, fontWeight: 700, border: `1px solid ${T.green}`, background: "transparent", color: T.green, cursor: "pointer", fontFamily: T.font }}>Unblock</button>}
-                        <button style={{ padding: "4px 10px", borderRadius: 6, fontSize: 11, fontWeight: 700, border: `1px solid ${T.border}`, background: "transparent", color: T.t2, cursor: "pointer", fontFamily: T.font }}>View</button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
+
+          <div className="mobile-only" style={{ padding: 12 }}>
+            {filtered.slice(0, 5).map(u => (
+              <div key={u.id} className="mobile-table-card">
+                <div className="row"><strong>{u.name}</strong> <Pill status={u.status} /></div>
+                <div className="row"><span className="label">Joined</span> <span>{u.joined}</span></div>
+                <div className="row"><span className="label">Spent</span> <span style={{ color: T.green }}>₹{u.spent.toLocaleString()}</span></div>
+                <div style={{ display: 'flex', gap: 6, marginTop: 10 }}>
+                  <button style={{ flex: 1, padding: '8px', borderRadius: 8, background: T.glass, border: `1px solid ${T.border}`, fontSize: 11, fontWeight: 700, color: T.t2 }}>View</button>
+                  <button style={{ flex: 1, padding: '8px', borderRadius: 8, background: 'rgba(255,82,82,0.1)', border: `1px solid ${T.red}`, fontSize: 11, fontWeight: 700, color: T.red }}>Block</button>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <table className="hide-on-mobile">
+            <thead><tr><th>User</th><th>Joined</th><th>Bookings</th><th>Spent</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody>
+              {filtered.map(u => (
+                <tr key={u.id}>
+                  <td>
+                    <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                      <Avatar name={u.name} size={32} />
+                      <div><strong>{u.name}</strong><div style={{ fontSize: 11, color: T.t3 }}>{u.phone}</div></div>
+                    </div>
+                  </td>
+                  <td>{u.joined}</td>
+                  <td style={{ fontWeight: 700 }}>{u.bookings}</td>
+                  <td style={{ color: T.green, fontWeight: 700 }}>₹{u.spent.toLocaleString()}</td>
+                  <td><Pill status={u.status} /></td>
+                  <td><button style={{ padding: "4px 8px", borderRadius: 6, fontSize: 11, border: `1px solid ${T.border}`, background: "transparent", color: T.t2 }}>Manage</button></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </GlassCard>
       </div>
     );
@@ -260,20 +291,30 @@ export const AdminDashboard = () => {
     const filtered = bookings.filter(b => (cityFilter === "All" || b.city === cityFilter) && (statusFilter === "All" || b.status === statusFilter));
     return (
       <div className="fade-up">
-        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 28 }}>
-          <div><div style={{ fontFamily: T.font2, fontSize: 26, fontWeight: 700, marginBottom: 4 }}>Booking Oversight</div><div style={{ fontSize: 14, color: T.t3 }}>All platform bookings · Today</div></div>
+        <div className="flex-stack" style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 28 }}>
+          <div><div style={{ fontFamily: T.font2, fontSize: "clamp(22px, 6vw, 26px)", fontWeight: 700, marginBottom: 4 }}>Booking Oversight</div><div style={{ fontSize: 13, color: T.t3 }}>{bookings.length} total today</div></div>
           <Btn variant="ghost" sm>Export</Btn>
         </div>
-        <div style={{ display: "flex", gap: 10, marginBottom: 20, flexWrap: "wrap" }}>
-          <div style={{ display: "flex", gap: 6 }}>
-            {cities.map(c => <button key={c} onClick={() => setCityFilter(c)} style={{ padding: "7px 14px", borderRadius: 20, fontSize: 12, fontWeight: 600, color: cityFilter === c ? T.green : T.t3, background: cityFilter === c ? T.greenGlow : "transparent", border: `1px solid ${cityFilter === c ? T.green : T.border}`, cursor: "pointer" }}>{c}</button>)}
-          </div>
-          <div style={{ display: "flex", gap: 6 }}>
-            {statuses.map(s => <button key={s} onClick={() => setStatusFilter(s)} style={{ padding: "7px 14px", borderRadius: 20, fontSize: 12, fontWeight: 600, color: statusFilter === s ? T.purple2 : T.t3, background: statusFilter === s ? T.purpleGlow : "transparent", border: `1px solid ${statusFilter === s ? T.purple : T.border}`, cursor: "pointer" }}>{s}</button>)}
-          </div>
+        <div className="hscroll" style={{ marginBottom: 12 }}>
+          {cities.map(c => <button key={c} onClick={() => setCityFilter(c)} style={{ padding: "7px 14px", borderRadius: 20, fontSize: 12, fontWeight: 600, color: cityFilter === c ? T.green : T.t3, background: cityFilter === c ? T.greenGlow : "transparent", border: `1px solid ${cityFilter === c ? T.green : T.border}`, cursor: "pointer", whiteSpace: 'nowrap' }}>{c}</button>)}
         </div>
+        <div className="hscroll" style={{ marginBottom: 24 }}>
+          {statuses.map(s => <button key={s} onClick={() => setStatusFilter(s)} style={{ padding: "7px 14px", borderRadius: 20, fontSize: 12, fontWeight: 600, color: statusFilter === s ? T.purple2 : T.t3, background: statusFilter === s ? T.purpleGlow : T.glass, border: `1px solid ${statusFilter === s ? T.purple : T.border}`, cursor: "pointer", whiteSpace: 'nowrap' }}>{s}</button>)}
+        </div>
+
         <GlassCard style={{ padding: 0, overflow: "hidden" }}>
-          <table>
+          <div className="mobile-only" style={{ padding: 12 }}>
+            {filtered.slice(0, 10).map(b => (
+              <div key={b.id} className="mobile-table-card">
+                <div className="row"><strong>{b.guest}</strong> <Pill status={b.status} /></div>
+                <div className="row"><span className="label">Venue</span> <span>{b.venue}</span></div>
+                <div className="row"><span className="label">Amount</span> <span style={{ fontWeight: 700 }}>₹{b.amount?.toLocaleString()}</span></div>
+                <div className="row"><span className="label">City</span> <span>{b.city}</span></div>
+              </div>
+            ))}
+          </div>
+
+          <table className="hide-on-mobile">
             <thead><tr><th>Booking ID</th><th>Guest</th><th>Venue</th><th>City</th><th>Type</th><th>Amount</th><th>Commission</th><th>Payment</th><th>Status</th></tr></thead>
             <tbody>
               {filtered.map(b => (
@@ -300,16 +341,33 @@ export const AdminDashboard = () => {
   // Venue Moderation
   const VenueModeration = () => (
     <div className="fade-up">
-      <div style={{ fontFamily: T.font2, fontSize: 26, fontWeight: 700, marginBottom: 4 }}>Venue Moderation</div>
-      <div style={{ fontSize: 14, color: T.t3, marginBottom: 28 }}>Review and approve venue content</div>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 18, marginBottom: 28 }}>
-        <KpiCard icon="✅" label="Active Venues" value={venues.filter(v => v.status === "Active").length.toString()} accentColor={T.green} />
-        <KpiCard icon="⏳" label="Pending Review" value={venues.filter(v => v.status === "Pending").length.toString()} accentColor={T.gold} />
-        <KpiCard icon="🌈" label="Rainbow Verified" value="3" accentColor={T.purple} />
+      <div style={{ fontFamily: T.font2, fontSize: "clamp(22px, 6vw, 26px)", fontWeight: 700, marginBottom: 4 }}>Venue Moderation</div>
+      <div style={{ fontSize: 13, color: T.t3, marginBottom: 28 }}>Review and approve venue content</div>
+      
+      <div className="grid-2" style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 14, marginBottom: 24 }}>
+        <KpiCard icon="✅" label="Active" value={venues.filter(v => v.status === "Active").length.toString()} accentColor={T.green} />
+        <KpiCard icon="⏳" label="Pending" value={venues.filter(v => v.status === "Pending").length.toString()} accentColor={T.gold} />
+        <KpiCard icon="🌈" label="Verified" value="3" accentColor={T.purple} />
       </div>
+
       <GlassCard style={{ padding: 0, overflow: "hidden" }}>
         <div style={{ padding: "18px 22px", borderBottom: `1px solid ${T.border}` }}><div style={{ fontFamily: T.font2, fontSize: 15, fontWeight: 700 }}>All Venues</div></div>
-        <table>
+        
+        <div className="mobile-only" style={{ padding: 12 }}>
+          {venues.map(v => (
+            <div key={v.id} className="mobile-table-card">
+              <div className="row"><strong>{v.name}</strong> <Pill status={v.status} /></div>
+              <div className="row"><span className="label">Location</span> <span>{v.location}</span></div>
+              <div className="row"><span className="label">Vendor</span> <span>{vendors.find(vn => vn.id === v.vendor)?.name || "—"}</span></div>
+              <div style={{ display: 'flex', gap: 6, marginTop: 10 }}>
+                {v.status === "Pending" && <button style={{ flex: 1.5, padding: '8px', borderRadius: 8, background: T.greenGlow, border: `1px solid ${T.green}`, fontSize: 11, fontWeight: 700, color: T.green }}>Approve</button>}
+                <button style={{ flex: 1, padding: '8px', borderRadius: 8, background: T.glass, border: `1px solid ${T.border}`, fontSize: 11, fontWeight: 700, color: T.t2 }}>View</button>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <table className="hide-on-mobile">
           <thead><tr><th>Venue</th><th>Vendor</th><th>City</th><th>Rating</th><th>Status</th><th>Actions</th></tr></thead>
           <tbody>
             {venues.map(v => (
@@ -322,8 +380,6 @@ export const AdminDashboard = () => {
                 <td>
                   <div style={{ display: "flex", gap: 6 }}>
                     {v.status === "Pending" && <button onClick={() => showToast(`${v.name} approved!`)} style={{ padding: "4px 10px", borderRadius: 6, fontSize: 11, fontWeight: 700, border: `1px solid ${T.green}`, background: "transparent", color: T.green, cursor: "pointer", fontFamily: T.font }}>Approve</button>}
-                    {v.status === "Pending" && <button onClick={() => showToast(`${v.name} rejected.`, T.red)} style={{ padding: "4px 10px", borderRadius: 6, fontSize: 11, fontWeight: 700, border: `1px solid ${T.red}`, background: "transparent", color: T.red, cursor: "pointer", fontFamily: T.font }}>Reject</button>}
-                    {v.status === "Active" && <button onClick={() => showToast(`${v.name} suspended.`, T.gold)} style={{ padding: "4px 10px", borderRadius: 6, fontSize: 11, fontWeight: 700, border: `1px solid ${T.gold}`, background: "transparent", color: T.gold, cursor: "pointer", fontFamily: T.font }}>Suspend</button>}
                     <button style={{ padding: "4px 10px", borderRadius: 6, fontSize: 11, fontWeight: 700, border: `1px solid ${T.border}`, background: "transparent", color: T.t2, cursor: "pointer", fontFamily: T.font }}>View</button>
                   </div>
                 </td>
@@ -345,9 +401,16 @@ export const AdminDashboard = () => {
   };
 
   return (
-    <div style={{ display: "flex", minHeight: "100vh", paddingTop: 74 }}>
+    <div className="flex-stack" style={{ display: "flex", minHeight: "100vh", paddingTop: 74, paddingBottom: 64 }}>
+      <MobileAppHeader 
+        title="Admin Panel" 
+        navSections={navSections} 
+        onSelect={setPanel} 
+        activePanel={panel} 
+      />
+      
       {/* Admin Sidebar */}
-      <div style={{ width: 256, minWidth: 256, background: "rgba(8,8,12,0.97)", borderRight: `1px solid ${T.border}`, display: "flex", flexDirection: "column", padding: "28px 0", position: "sticky", top: 74, height: "calc(100vh - 74px)", overflowY: "auto" }}>
+      <div className="hide-mobile" style={{ width: 256, minWidth: 256, background: "rgba(8,8,12,0.97)", borderRight: `1px solid ${T.border}`, display: "flex", flexDirection: "column", padding: "28px 0", position: "sticky", top: 74, height: "calc(100vh - 74px)", overflowY: "auto" }}>
         <div style={{ padding: "0 24px 24px", borderBottom: `1px solid ${T.border}`, marginBottom: 16 }}>
           <div style={{ display: "inline-flex", alignItems: "center", gap: 6, background: T.purpleGlow, border: "1px solid rgba(124,77,255,0.3)", borderRadius: 8, padding: "3px 10px", fontSize: 10, fontWeight: 700, color: T.purple2, marginBottom: 8 }}>⚡ SUPER ADMIN</div>
           <div style={{ fontFamily: T.font2, fontSize: 20, fontWeight: 700 }}>NightOut Admin</div>
@@ -372,10 +435,16 @@ export const AdminDashboard = () => {
           </div>
         ))}
       </div>
+      
       {/* Content */}
-      <div style={{ flex: 1, padding: "36px 40px", overflowY: "auto" }}>
-        {panelMap[panel] || <SuperDashPanel />}
+      <div className="p-shrink" style={{ flex: 1, padding: "36px 40px", overflowY: "auto" }}>
+        <div className="grid-1" style={{ display: 'grid', gridTemplateColumns: '1fr' }}>
+          {panelMap[panel] || <SuperDashPanel />}
+        </div>
       </div>
+
+      <BottomNav items={bottomNavItems} active={panel} onSelect={setPanel} />
+
       {/* Toast */}
       {toast && <div className="fade-in" style={{ position: "fixed", bottom: 32, right: 32, background: T.glass3, border: `1px solid ${toast.color}`, borderRadius: T.r, padding: "14px 22px", color: toast.color, fontWeight: 600, fontSize: 14, backdropFilter: "blur(20px)", boxShadow: `0 0 30px ${toast.color}44`, zIndex: 9998 }}>{toast.msg}</div>}
     </div>

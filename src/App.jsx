@@ -6,6 +6,8 @@ import { VendorDashboard } from './pages/vendor/VendorDashboard';
 import { AdminDashboard } from './pages/admin/AdminDashboard';
 import { TopNav } from './components/common/TopNav';
 
+import { MobileAppHeader, BottomNav } from './components/common/MobileAppLayout';
+
 export default function App() {
   const [role, setRole] = useState("app");
 
@@ -13,15 +15,24 @@ export default function App() {
     window.scrollTo(0, 0);
   }, [role]);
 
+  const appNavItems = [
+    ["app", "📱", "Home"],
+    ["vendor", "🏪", "Vendor"],
+    ["admin", "⚡", "Admin"],
+  ];
+
   return (
     <>
       <GlobalStyles />
-      <TopNav role={role} setRole={setRole} />
-      <div style={{ background: T.bg, color: "#fff", minHeight: "100vh", position: "relative" }}>
+      <div className="hide-mobile">
+        <TopNav role={role} setRole={setRole} />
+      </div>
+      <div style={{ background: T.bg, color: "#fff", minHeight: "100vh", position: "relative", paddingBottom: role === "app" ? 64 : 0 }}>
         {role === "app" && <LandingPage setRole={setRole} />}
         {role === "vendor" && <VendorDashboard />}
         {role === "admin" && <AdminDashboard />}
       </div>
+      {role === "app" && <BottomNav items={appNavItems} active={role} onSelect={setRole} />}
     </>
   );
 }
