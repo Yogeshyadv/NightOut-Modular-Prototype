@@ -12,8 +12,8 @@ const Avatar = ({ name, size = 36, color = T.green }) => {
 };
 
 export const ProfileScreen = ({ navigate }) => (
-  <div className="slide-in" style={{ height: "100%", position: "relative" }}>
-    <div className="mscroll" style={{ paddingBottom: 90 }}>
+  <div className="slide-in" style={{ height: "100%", display: "flex", flexDirection: "column" }}>
+    <div className="mscroll" style={{ flex: 1, paddingBottom: 40, height: "auto" }}>
       <div style={{ padding: "56px 20px 24px", background: `radial-gradient(ellipse at 50% 0%, rgba(0,200,83,0.07) 0%, transparent 60%)`, borderBottom: `1px solid ${T.border}`, marginBottom: 20 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 20 }}>
           <div style={{ width: 72, height: 72, borderRadius: 22, background: `linear-gradient(135deg,${T.green},#007A32)`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 26, fontWeight: 800, color: "#000", flexShrink: 0, position: "relative", boxShadow: "0 0 30px rgba(0,200,83,0.3)" }}>

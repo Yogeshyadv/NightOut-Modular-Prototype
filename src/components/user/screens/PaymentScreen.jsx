@@ -7,12 +7,12 @@ export const PaymentScreen = ({ venue, navigate }) => {
   const methods = [{ icon: "🔵", name: "UPI", sub: "GPay, PhonePe, Paytm", bg: "rgba(0,100,255,0.1)" }, { icon: "💳", name: "Credit / Debit Card", sub: "Visa, Mastercard, RuPay", bg: "rgba(255,140,0,0.1)" }, { icon: "🏦", name: "Net Banking", sub: "All major banks", bg: "rgba(0,200,83,0.1)" }, { icon: "👛", name: "Wallet", sub: "Paytm, Amazon Pay", bg: "rgba(124,77,255,0.1)" }];
   const v = venue || venues[0];
   return (
-    <div className="slide-in" style={{ height: "100%", position: "relative" }}>
-      <div style={{ padding: "56px 20px 18px", display: "flex", alignItems: "center", gap: 14, borderBottom: `1px solid ${T.border}` }}>
+    <div className="slide-in" style={{ height: "100%", display: "flex", flexDirection: "column" }}>
+      <div style={{ padding: "56px 20px 18px", display: "flex", alignItems: "center", gap: 14, borderBottom: `1px solid ${T.border}`, flexShrink: 0 }}>
         <div onClick={() => navigate("booking")} style={{ width: 40, height: 40, background: T.glass, border: `1px solid ${T.border}`, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>←</div>
         <div><div style={{ fontFamily: T.font2, fontSize: 20, fontWeight: 700 }}>Payment</div><div style={{ fontSize: 12, color: T.t2 }}>Secure checkout</div></div>
       </div>
-      <div className="mscroll" style={{ paddingBottom: 20 }}>
+      <div className="mscroll" style={{ flex: 1, paddingBottom: 40, height: "auto" }}>
         <div className="glass" style={{ borderRadius: T.rlg, padding: 20, margin: "18px 20px 18px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 18, paddingBottom: 16, borderBottom: `1px solid ${T.border}` }}>
             <div style={{ width: 48, height: 48, borderRadius: 14, background: T.greenGlow, border: "1px solid rgba(0,200,83,0.2)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1.5rem" }}>{v.emoji}</div>

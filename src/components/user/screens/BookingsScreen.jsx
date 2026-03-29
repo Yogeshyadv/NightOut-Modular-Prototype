@@ -15,17 +15,17 @@ export const BookingsScreen = ({ navigate }) => {
   const [tab, setTab] = useState("upcoming");
   const filtered = userBookings.filter(b => b.status === tab);
   return (
-    <div className="slide-in" style={{ height: "100%", position: "relative" }}>
-      <div style={{ padding: "56px 20px 18px" }}>
+    <div className="slide-in" style={{ height: "100%", display: "flex", flexDirection: "column" }}>
+      <div style={{ padding: "56px 20px 18px", flexShrink: 0 }}>
         <div style={{ fontFamily: T.font2, fontSize: 22, fontWeight: 700, marginBottom: 4 }}>My Bookings</div>
         <div style={{ fontSize: 13, color: T.t2 }}>Your nightlife history</div>
       </div>
-      <div style={{ display: "flex", background: T.glass, border: `1px solid ${T.border}`, borderRadius: T.r, padding: 4, margin: "0 20px 18px", backdropFilter: "blur(10px)" }}>
+      <div style={{ display: "flex", background: T.glass, border: `1px solid ${T.border}`, borderRadius: T.r, padding: 4, margin: "0 20px 18px", backdropFilter: "blur(10px)", flexShrink: 0 }}>
         {["upcoming", "past"].map(t => (
           <div key={t} onClick={() => setTab(t)} style={{ flex: 1, padding: 10, textAlign: "center", fontSize: 13, fontWeight: 600, borderRadius: T.rsm, cursor: "pointer", background: tab === t ? T.green : "transparent", color: tab === t ? "#000" : T.t3, transition: "all 0.2s", textTransform: "capitalize" }}>{t}</div>
         ))}
       </div>
-      <div className="mscroll" style={{ padding: "0 20px 90px" }}>
+      <div className="mscroll" style={{ flex: 1, padding: "0 20px 40px", height: "auto" }}>
         {filtered.length === 0 && <EmptyState icon="📅" title="No bookings yet" sub={tab === "upcoming" ? "Book a venue to see upcoming plans" : "Past bookings will appear here"} />}
         {filtered.map(b => (
           <div key={b.id} className="glass hover-card" style={{ borderRadius: T.rlg, overflow: "hidden", marginBottom: 16 }}>

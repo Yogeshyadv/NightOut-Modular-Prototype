@@ -4,12 +4,12 @@ import { MobNav } from '../MobNav';
 import { venues } from '../../../data/mockData';
 
 export const FavoritesScreen = ({ navigate, setVenue }) => (
-  <div className="slide-in" style={{ height: "100%", position: "relative" }}>
-    <div style={{ padding: "56px 20px 18px" }}>
+  <div className="slide-in" style={{ height: "100%", display: "flex", flexDirection: "column" }}>
+    <div style={{ padding: "56px 20px 18px", flexShrink: 0 }}>
       <div style={{ fontFamily: T.font2, fontSize: 22, fontWeight: 700, marginBottom: 4 }}>Saved Venues</div>
       <div style={{ fontSize: 13, color: T.t2 }}>{venues.length} venues in your wishlist</div>
     </div>
-    <div className="mscroll" style={{ padding: "0 20px 90px" }}>
+    <div className="mscroll" style={{ flex: 1, padding: "0 20px 40px", height: "auto" }}>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
         {venues.map(v => (
           <div key={v.id} className="glass hover-scale" style={{ borderRadius: T.rlg, overflow: "hidden", cursor: "pointer" }} onClick={() => { setVenue(v); navigate("venue"); }}>

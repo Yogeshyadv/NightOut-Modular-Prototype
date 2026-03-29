@@ -12,12 +12,12 @@ export const BookingScreen = ({ venue, navigate }) => {
   const sel = types.find(t => t.id === entry);
   const total = sel.price * guests + 99 + 30;
   return (
-    <div className="slide-in" style={{ height: "100%", position: "relative" }}>
-      <div style={{ padding: "56px 20px 18px", display: "flex", alignItems: "center", gap: 14, borderBottom: `1px solid ${T.border}` }}>
+    <div className="slide-in" style={{ height: "100%", display: "flex", flexDirection: "column" }}>
+      <div style={{ padding: "56px 20px 18px", display: "flex", alignItems: "center", gap: 14, borderBottom: `1px solid ${T.border}`, flexShrink: 0 }}>
         <div onClick={() => navigate("venue")} style={{ width: 40, height: 40, background: T.glass, border: `1px solid ${T.border}`, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>←</div>
         <div><div style={{ fontFamily: T.font2, fontSize: 20, fontWeight: 700 }}>Guestlist Booking</div><div style={{ fontSize: 12, color: T.t2 }}>{v.name}</div></div>
       </div>
-      <div className="mscroll" style={{ paddingBottom: 20 }}>
+      <div className="mscroll" style={{ flex: 1, paddingBottom: 40, height: "auto" }}>
         <div className="hscroll" style={{ display: "flex", gap: 10, padding: "18px 20px 0", marginBottom: 18 }}>
           {[["Mon", "24"], ["Tue", "25"], ["Wed", "26"], ["Thu", "27"], ["Fri", "28"], ["Sat", "29"]].map(([d, n], i) => (
             <div key={i} onClick={() => setDay(i)} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2, padding: "10px 14px", minWidth: 52, background: day === i ? T.green : T.glass, border: `1.5px solid ${day === i ? T.green : T.border}`, borderRadius: T.rsm, cursor: "pointer", flexShrink: 0, transition: "all 0.2s" }}>

@@ -13,8 +13,8 @@ export const VenueDetailScreen = ({ venue, navigate }) => {
     </div>
   );
   return (
-    <div className="slide-in" style={{ height: "100%", position: "relative" }}>
-      <div className="mscroll" style={{ paddingBottom: 100 }}>
+    <div className="slide-in" style={{ height: "100%", display: "flex", flexDirection: "column" }}>
+      <div className="mscroll" style={{ flex: 1, height: "auto", paddingBottom: 100 }}>
         <div style={{ height: 280, background: venue.gradient, display: "flex", alignItems: "center", justifyItems: "center", justifyContent: "center", fontSize: "6rem", position: "relative", overflow: "hidden", flexShrink: 0 }}>
           {venue.emoji}
           <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom,rgba(0,0,0,0.3) 0%,transparent 40%,rgba(10,10,10,1) 100%)" }} />

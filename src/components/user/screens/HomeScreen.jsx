@@ -7,8 +7,8 @@ export const HomeScreen = ({ navigate, setVenue }) => {
   const [activeFilter, setActiveFilter] = useState("All");
   const filters = ["All", "Stag", "Couples", "VIP", "Ladies Night", "🌈 Rainbow"];
   return (
-    <div className="slide-in" style={{ height: "100%", position: "relative" }}>
-      <div style={{ padding: "56px 20px 14px", display: "flex", alignItems: "center", justifyContent: "space-between", background: `linear-gradient(to bottom, #0A0A0A 70%, transparent)`, position: "sticky", top: 0, zIndex: 20 }}>
+    <div className="slide-in" style={{ height: "100%", display: "flex", flexDirection: "column" }}>
+      <div style={{ padding: "56px 20px 14px", display: "flex", alignItems: "center", justifyContent: "space-between", background: `linear-gradient(to bottom, #0A0A0A 70%, transparent)`, flexShrink: 0, zIndex: 20 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8, background: T.glass, border: `1px solid ${T.border2}`, borderRadius: 30, padding: "8px 16px", fontSize: 14, fontWeight: 600, backdropFilter: "blur(20px)", cursor: "pointer" }}>
           <div className="blink" style={{ width: 8, height: 8, background: T.green, borderRadius: "50%", boxShadow: `0 0 8px ${T.green}` }} />Jaipur ▾
         </div>
@@ -21,7 +21,7 @@ export const HomeScreen = ({ navigate, setVenue }) => {
           ))}
         </div>
       </div>
-      <div className="mscroll" style={{ paddingBottom: 90 }}>
+      <div className="mscroll" style={{ flex: 1, paddingBottom: 40, height: "auto" }}>
         <div style={{ padding: "0 20px 18px" }}>
           <div style={{ fontSize: 12, color: T.green, fontWeight: 600, textTransform: "uppercase", letterSpacing: 1, marginBottom: 4 }}>Good Evening</div>
           <div style={{ fontFamily: T.font2, fontSize: 24, fontWeight: 800, letterSpacing: "-0.5px" }}>Tonight in Jaipur</div>

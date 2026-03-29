@@ -17,15 +17,15 @@ export const SearchScreen = ({ navigate, setVenue }) => {
   const cities = ["All", "Jaipur", "Delhi", "Mumbai", "Bengaluru"];
   const filtered = venues.filter(v => (q === "" || v.name.toLowerCase().includes(q.toLowerCase()) || v.genre.some(g => g.toLowerCase().includes(q.toLowerCase()))) && (activeCity === "All" || v.location.includes(activeCity)));
   return (
-    <div className="slide-in" style={{ height: "100%", position: "relative" }}>
-      <div style={{ padding: "60px 20px 16px" }}>
+    <div className="slide-in" style={{ height: "100%", display: "flex", flexDirection: "column" }}>
+      <div style={{ padding: "60px 20px 16px", flexShrink: 0 }}>
         <div style={{ fontFamily: T.font2, fontSize: 20, fontWeight: 700, marginBottom: 14 }}>Search Venues</div>
         <input value={q} onChange={e => setQ(e.target.value)} placeholder="🔍  Clubs, events, areas..." style={{ width: "100%", background: T.glass, border: `1.5px solid ${T.border}`, borderRadius: T.r, padding: "13px 16px", color: T.white, fontSize: 14, fontFamily: T.font, marginBottom: 14 }} onFocus={e => e.target.style.borderColor = T.green} onBlur={e => e.target.style.borderColor = T.border} />
-        <div className="hscroll" style={{ display: "flex", gap: 8 }}>
+        <div className="hscroll" style={{ display: "flex", gap: 8, flexShrink: 0 }}>
           {cities.map(c => <div key={c} onClick={() => setActiveCity(c)} style={{ padding: "6px 14px", borderRadius: 20, fontSize: 12, fontWeight: 600, border: `1px solid ${activeCity === c ? T.green : T.border}`, background: activeCity === c ? T.greenGlow : T.glass, color: activeCity === c ? T.green : T.t2, cursor: "pointer", whiteSpace: "nowrap" }}>{c}</div>)}
         </div>
       </div>
-      <div className="mscroll" style={{ padding: "0 20px 90px" }}>
+      <div className="mscroll" style={{ flex: 1, padding: "0 20px 40px", height: "auto" }}>
         {!q && !filtered.length && <EmptyState icon="🔍" title="Start searching" sub="Type a venue name or vibe" />}
         {filtered.length === 0 && q && <EmptyState icon="😕" title="No results found" sub={`No venues found for "${q}"`} />}
         {filtered.map(v => (

@@ -5,8 +5,8 @@ import { venues } from '../../../data/mockData';
 export const QRScreen = ({ venue, navigate }) => {
   const v = venue || venues[0];
   return (
-    <div className="slide-in" style={{ height: "100%", position: "relative" }}>
-      <div className="mscroll">
+    <div className="slide-in" style={{ height: "100%", display: "flex", flexDirection: "column" }}>
+      <div className="mscroll" style={{ flex: 1, paddingBottom: 40, height: "auto" }}>
         <div style={{ padding: "72px 20px 24px", textAlign: "center" }}>
           <div className="qr-pop" style={{ width: 72, height: 72, background: T.greenGlow, border: "2px solid rgba(0,200,83,0.4)", borderRadius: "50%", margin: "0 auto 18px", display: "flex", alignItems: "center", justifyItems: "center", justifyContent: "center", fontSize: 28, color: T.green, boxShadow: "0 0 40px rgba(0,200,83,0.2)" }}>✓</div>
           <div style={{ fontFamily: T.font2, fontSize: 24, fontWeight: 700, marginBottom: 6 }}>Booking Confirmed!</div>
