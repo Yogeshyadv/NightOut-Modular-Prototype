@@ -33,8 +33,8 @@ export default {
         },
       },
       fontFamily: {
-        sans:    ['Poppins', 'sans-serif'],
-        display: ['"Space Grotesk"', 'sans-serif'],
+        body:    ['Inter', 'sans-serif'],
+        display: ['Syne', 'sans-serif'],
         mono:    ['"JetBrains Mono"', 'monospace'],
       },
       animation: {

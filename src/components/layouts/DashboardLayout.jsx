@@ -123,8 +123,8 @@ export default function DashboardLayout({ children, role = 'vendor' }) {
         <div className="h-14 flex items-center justify-between px-4 border-b dark:border-dark-600 border-light-200 flex-shrink-0">
           {!collapsed && (
             <Link to={isAdmin ? '/admin/dashboard' : '/vendor/dashboard'} className="flex items-center gap-2 overflow-hidden">
-              <div className={cn('w-7 h-7 rounded-lg flex items-center justify-center font-display font-bold text-xs flex-shrink-0', isAdmin ? 'bg-purple text-white' : 'bg-green text-black')}>
-                N
+              <div className={cn('w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden', isAdmin ? 'ring-2 ring-purple/50' : 'ring-2 ring-green/50')}>
+                <img src="/logo.png" alt="NightOut" className="w-full h-full object-contain" />
               </div>
               <div className="min-w-0">
                 <div className="font-display font-bold text-sm leading-tight">NightOut</div>
@@ -133,8 +133,8 @@ export default function DashboardLayout({ children, role = 'vendor' }) {
             </Link>
           )}
           {collapsed && (
-            <div className={cn('w-7 h-7 rounded-lg mx-auto flex items-center justify-center font-display font-bold text-xs', isAdmin ? 'bg-purple text-white' : 'bg-green text-black')}>
-              N
+            <div className={cn('w-7 h-7 rounded-lg mx-auto flex items-center justify-center overflow-hidden', isAdmin ? 'ring-2 ring-purple/50' : 'ring-2 ring-green/50')}>
+              <img src="/logo.png" alt="NightOut" className="w-full h-full object-contain" />
             </div>
           )}
           <button

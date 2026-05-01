@@ -1,8 +1,7 @@
-// ─────────────────────────────────────────────────────────────────────────────
-//  Features.jsx
-// ─────────────────────────────────────────────────────────────────────────────
+import { motion } from 'framer-motion';
 import { Button, Icon, SectionLabel } from '../../components/ui/index.js';
 import { cn } from '../../utils/helpers.js';
+import { useNavigate } from 'react-router-dom';
 
 const USER_FEATURES = [
   { icon: '🧭', title: 'Smart Discovery',       desc: 'AI-powered venue picks based on your taste, budget, and mood. Browse live crowd levels, tonight\'s DJ, and exact pricing before you leave home.' },
@@ -24,86 +23,141 @@ const VENDOR_FEATURES = [
   { icon: '🔔', title: 'Smart Notifications',      desc: 'Thursday pricing reminders, booking surge alerts, no-show flags, and daily end-of-day summaries sent directly to you.' },
 ];
 
+const staggerContainer = {
+  animate: { transition: { staggerChildren: 0.1 } }
+};
+
+const fadeInUp = {
+  initial: { opacity: 0, y: 30 },
+  animate: { opacity: 1, y: 0 },
+  transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] }
+};
+
 function FeatureGrid({ features, accent = 'green' }) {
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <motion.div 
+      variants={staggerContainer}
+      initial="initial"
+      whileInView="animate"
+      viewport={{ once: true }}
+      className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8"
+    >
       {features.map((f, i) => (
-        <div key={i} className={cn(
-          'dark:bg-dark-700 bg-light-50 dark:border-dark-500 border-light-200 border rounded-2xl p-6',
-          'hover:-translate-y-1 transition-all duration-200',
-          accent === 'green' ? 'hover:dark:border-green/30 hover:border-green/30' : 'hover:dark:border-purple/30 hover:border-purple/30',
-        )}>
-          <div className="text-2xl mb-3">{f.icon}</div>
-          <h3 className="font-display text-sm font-bold mb-2">{f.title}</h3>
-          <p className="text-xs dark:text-dark-100 text-dark-400 leading-relaxed">{f.desc}</p>
-        </div>
+        <motion.div 
+          key={i} 
+          variants={fadeInUp}
+          className="glass-card !p-8 group hover:-translate-y-4 hover:shadow-[0_20px_60px_-15px_rgba(0,0,0,0.5)] transition-all duration-700 relative overflow-hidden"
+        >
+          <div className="absolute inset-0 bg-gradient-to-br from-green/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+          <div className="text-5xl mb-8 transition-transform duration-700 group-hover:scale-125 group-hover:-rotate-6 origin-center inline-block">{f.icon}</div>
+          <h3 className="heading-sm mb-4 text-2xl group-hover:text-green transition-colors duration-500">{f.title}</h3>
+          <p className="dark:text-dark-100 text-dark-500 leading-relaxed font-medium">{f.desc}</p>
+        </motion.div>
       ))}
-    </div>
+    </motion.div>
   );
 }
 
 export default function Features() {
+  const navigate = useNavigate();
+
   return (
-    <div className="dark:text-white text-dark-900">
+    <div className="dark:text-white text-dark-900 font-body overflow-x-hidden">
       {/* Hero */}
-      <section className="py-24 text-center relative overflow-hidden">
-        <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse at 50% 0, rgba(0,200,83,0.06) 0%, transparent 60%)' }} />
-        <div className="max-w-4xl mx-auto px-5 relative">
-          <SectionLabel>Platform Features</SectionLabel>
-          <h1 className="heading-xl mt-4 mb-6">
-            Everything you need for<br /><span className="text-gradient">the perfect night</span>
+      <section className="py-40 text-center relative overflow-hidden">
+        <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse at 50% 0, rgba(0,200,83,0.15) 0%, transparent 60%)' }} />
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 1, ease: [0.22, 1, 0.36, 1] }}
+          className="max-w-4xl mx-auto px-6 relative"
+        >
+          <SectionLabel>Platform Capabilities</SectionLabel>
+          <h1 className="heading-xl mt-8 mb-10 tracking-tighter">
+            Everything you need for<br /><span className="text-gradient drop-shadow-2xl">the perfect night out</span>
           </h1>
-          <p className="text-lg dark:text-dark-100 text-dark-400 max-w-2xl mx-auto leading-relaxed">
-            A complete nightlife platform — for guests who want the best experience, and venues who want to deliver it.
+          <p className="text-xl dark:text-dark-100 text-dark-500 max-w-2xl mx-auto leading-relaxed font-medium">
+            A complete operating system for modern nightlife — built for guests who demand safety and venues that demand growth.
           </p>
-        </div>
+        </motion.div>
       </section>
 
       {/* User features */}
-      <section className="py-16 dark:bg-dark-800 bg-white">
-        <div className="max-w-7xl mx-auto px-5">
-          <div className="mb-10">
-            <SectionLabel>For Guests</SectionLabel>
-            <h2 className="heading-md mt-2">Your night, your way</h2>
-            <p className="text-sm dark:text-dark-100 text-dark-400 mt-2 max-w-xl">
-              Everything you need to discover, book, and experience the best nights safely.
+      <section className="py-32 dark:bg-dark-800 bg-white border-y dark:border-white/5 border-black/5">
+        <div className="max-w-7xl mx-auto px-6">
+          <motion.div 
+            initial={{ opacity: 0, x: -30 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            className="mb-20"
+          >
+            <SectionLabel>For Our Guests</SectionLabel>
+            <h2 className="heading-lg mt-6">Your weekend, upgraded</h2>
+            <p className="text-xl dark:text-dark-100 text-dark-500 mt-6 max-w-xl font-medium">
+              Discover, book, and experience India's elite venues with zero friction and total safety.
             </p>
-          </div>
+          </motion.div>
           <FeatureGrid features={USER_FEATURES} accent="green" />
         </div>
       </section>
 
       {/* Vendor features */}
-      <section className="py-16 dark:bg-dark-900 bg-light-50">
-        <div className="max-w-7xl mx-auto px-5">
-          <div className="mb-10">
-            <SectionLabel>For Venues</SectionLabel>
-            <h2 className="heading-md mt-2">Run your venue smarter</h2>
-            <p className="text-sm dark:text-dark-100 text-dark-400 mt-2 max-w-xl">
-              Real-time tools built for club owners who want to increase revenue and reduce friction.
+      <section className="py-32 dark:bg-dark-900 bg-light-50">
+        <div className="max-w-7xl mx-auto px-6">
+          <motion.div 
+            initial={{ opacity: 0, x: 30 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            className="mb-20 lg:text-right flex flex-col lg:items-end"
+          >
+            <SectionLabel>For Our Partners</SectionLabel>
+            <h2 className="heading-lg mt-6">Run your venue with precision</h2>
+            <p className="text-xl dark:text-dark-100 text-dark-500 mt-6 max-w-xl font-medium">
+              Real-time analytics and management tools built for high-volume premium clubs.
             </p>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+          </motion.div>
+          
+          <motion.div 
+            variants={staggerContainer}
+            initial="initial"
+            whileInView="animate"
+            viewport={{ once: true }}
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10"
+          >
             {VENDOR_FEATURES.map((f, i) => (
-              <div key={i} className="dark:bg-dark-700 bg-white dark:border-dark-500 border-light-200 border rounded-2xl p-7 hover:dark:border-purple/30 hover:border-purple/30 hover:-translate-y-1 transition-all duration-200">
-                <div className="text-3xl mb-4">{f.icon}</div>
-                <h3 className="font-display font-bold mb-2">{f.title}</h3>
-                <p className="text-sm dark:text-dark-100 text-dark-400 leading-relaxed">{f.desc}</p>
-              </div>
+              <motion.div 
+                key={i} 
+                variants={fadeInUp}
+                className="glass-card hover:-translate-y-4 hover:shadow-[0_20px_60px_-15px_rgba(0,0,0,0.5)] transition-all duration-700 group relative overflow-hidden"
+              >
+                <div className="absolute inset-0 bg-gradient-to-br from-purple/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+                <div className="text-5xl mb-8 transition-transform duration-700 group-hover:scale-125 group-hover:rotate-6 origin-center inline-block">{f.icon}</div>
+                <h3 className="heading-sm mb-4 text-2xl group-hover:text-purple-light transition-colors duration-500">{f.title}</h3>
+                <p className="dark:text-dark-100 text-dark-500 leading-relaxed font-medium relative z-10">{f.desc}</p>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
         </div>
       </section>
 
       {/* CTA */}
-      <section className="py-20 dark:bg-dark-800 bg-white text-center">
-        <div className="max-w-2xl mx-auto px-5">
-          <h2 className="heading-md mb-5">Start using NightOut today</h2>
-          <p className="dark:text-dark-100 text-dark-400 mb-8">Free for guests. Vendor plans from ₹0/month.</p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button size="lg" rightIcon="arrow" onClick={() => window.location.href='/register'}>Create Free Account</Button>
-            <Button size="lg" variant="ghost-dark" onClick={() => window.location.href='/pricing'}>See Pricing</Button>
-          </div>
+      <section className="py-40 dark:bg-dark-800 bg-white text-center relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-t from-green/5 via-transparent to-transparent opacity-50" />
+        <div className="max-w-3xl mx-auto px-6 relative z-10">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true }}
+          >
+            <h2 className="heading-lg mb-10">Experience the difference</h2>
+            <p className="text-xl dark:text-dark-100 text-dark-500 mb-16 leading-relaxed font-medium">
+              Join thousands of clubbers and hundreds of venues already using NightOut to power their nights.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-8 justify-center">
+              <Button size="xl" rightIcon="arrow" onClick={() => navigate('/register')}>Get Started Now</Button>
+              <Button size="xl" variant="ghost-dark" onClick={() => navigate('/pricing')}>Explore Pricing</Button>
+            </div>
+          </motion.div>
         </div>
       </section>
     </div>

@@ -25,7 +25,9 @@ function AuthShell({ children, title, subtitle }) {
 
         <div className="relative text-center max-w-sm w-full">
           <Link to="/" className="flex items-center gap-2 justify-center mb-12">
-            <div className="w-10 h-10 rounded-xl bg-green flex items-center justify-center font-display font-bold text-black shadow-green">N</div>
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center shadow-green">
+              <img src="/logo.png" alt="NightOut Logo" className="w-full h-full object-contain" />
+            </div>
             <span className="font-display font-bold text-2xl dark:text-white text-dark-900">Night<span className="text-green">Out</span></span>
           </Link>
 
@@ -59,7 +61,9 @@ function AuthShell({ children, title, subtitle }) {
 
         <div className="w-full max-w-md">
           <Link to="/" className="flex items-center gap-2 mb-8 lg:hidden">
-            <div className="w-7 h-7 rounded-lg bg-green flex items-center justify-center font-display font-bold text-black text-sm">N</div>
+            <div className="w-7 h-7 rounded-lg flex items-center justify-center">
+              <img src="/logo.png" alt="NightOut Logo" className="w-full h-full object-contain" />
+            </div>
             <span className="font-display font-bold text-lg">Night<span className="text-green">Out</span></span>
           </Link>
 

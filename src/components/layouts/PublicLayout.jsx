@@ -3,6 +3,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 import { useState, useEffect } from 'react';
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from '../../context/ThemeContext.jsx';
 import { useAuth }  from '../../context/AuthContext.jsx';
 import { Icon, Button } from '../ui/index.js';
@@ -27,7 +28,7 @@ function Navbar() {
   const [mobileOpen,  setMobileOpen]  = useState(false);
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 24);
+    const onScroll = () => setScrolled(window.scrollY > 20);
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
@@ -38,99 +39,118 @@ function Navbar() {
   return (
     <header
       className={cn(
-        'fixed top-0 inset-x-0 z-50 transition-all duration-300',
+        'fixed top-0 inset-x-0 z-50 transition-all duration-500',
         scrolled
-          ? 'dark:bg-dark-900/92 bg-white/92 backdrop-blur-xl dark:border-b dark:border-dark-600 border-b border-light-200 shadow-sm'
-          : 'bg-transparent',
+          ? 'py-3 dark:bg-dark-900/80 bg-white/80 backdrop-blur-xl border-b dark:border-white/5 border-black/5 shadow-sm'
+          : 'py-6 bg-transparent',
       )}
     >
-      <div className="max-w-7xl mx-auto px-5 h-16 flex items-center justify-between">
+      <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
 
         {/* ── Logo ── */}
         <Link to="/" className="flex items-center gap-2 group flex-shrink-0">
-          <div className="w-8 h-8 rounded-lg bg-green flex items-center justify-center font-display font-bold text-black text-sm shadow-green group-hover:shadow-green-lg transition-all">
-            N
+          <div className="w-10 h-10 rounded-2xl flex items-center justify-center shadow-lg shadow-green/20 group-hover:shadow-green/40 transition-all duration-500 group-hover:rotate-[10deg]">
+            <img src="/logo.png" alt="NightOut Logo" className="w-full h-full object-contain" />
           </div>
-          <span className="font-display font-bold text-lg tracking-tight">
+          <span className="font-display font-black text-xl tracking-tighter dark:text-white text-dark-900">
             Night<span className="text-green">Out</span>
           </span>
         </Link>
 
         {/* ── Desktop nav ── */}
-        <nav className="hidden md:flex items-center gap-1">
+        <nav className="hidden md:flex items-center gap-1 dark:bg-white/5 bg-black/5 backdrop-blur-md border dark:border-white/10 border-black/5 rounded-2xl p-1">
           {NAV_LINKS.map(link => (
             <NavLink key={link.to} to={link.to} end={link.to === '/'}
               className={({ isActive }) => cn(
-                'px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200',
+                'relative px-5 py-2 rounded-xl text-sm font-bold transition-all duration-300',
                 isActive
-                  ? 'text-green dark:bg-green/10 bg-green/8'
-                  : 'dark:text-dark-100 text-dark-400 hover:text-green dark:hover:bg-dark-600 hover:bg-light-100',
+                  ? 'text-black'
+                  : 'dark:text-white/60 text-dark-400 hover:dark:text-white hover:text-dark-900',
               )}
             >
-              {link.label}
+              {({ isActive }) => (
+                <>
+                  {isActive && (
+                    <motion.div 
+                      layoutId="nav-bg"
+                      className="absolute inset-0 bg-green rounded-xl shadow-lg shadow-green/20"
+                      transition={{ type: 'spring', bounce: 0.2, duration: 0.6 }}
+                    />
+                  )}
+                  <span className="relative z-10">{link.label}</span>
+                </>
+              )}
             </NavLink>
           ))}
         </nav>
 
         {/* ── Right actions ── */}
-        <div className="flex items-center gap-2.5">
+        <div className="flex items-center gap-3">
           {/* Theme toggle */}
           <button
             onClick={toggle}
-            aria-label="Toggle theme"
-            className="w-9 h-9 rounded-xl dark:bg-dark-600 bg-light-100 dark:hover:bg-dark-500 hover:bg-light-200 dark:text-dark-100 text-dark-400 hover:text-green flex items-center justify-center transition-all"
+            className="w-10 h-10 rounded-2xl dark:bg-white/5 bg-black/5 border dark:border-white/10 border-black/5 dark:hover:bg-white/10 hover:bg-black/10 dark:text-white/60 text-dark-400 dark:hover:text-green hover:text-green flex items-center justify-center transition-all duration-300"
           >
-            <Icon name={dark ? 'sun' : 'moon'} size={15} />
+            <Icon name={dark ? 'sun' : 'moon'} size={16} />
           </button>
 
           {/* Auth */}
           {user ? (
-            <Button size="sm" onClick={() => navigate(user.role === 'admin' ? '/admin/dashboard' : '/vendor/dashboard')} rightIcon="arrow">
+            <Button size="md" onClick={() => navigate(user.role === 'admin' ? '/admin/dashboard' : '/vendor/dashboard')} rightIcon="arrow">
               Dashboard
             </Button>
           ) : (
-            <>
+            <div className="flex items-center gap-1">
               <Link to="/login"
-                className="hidden sm:block text-sm font-semibold dark:text-dark-100 text-dark-400 hover:text-green px-3 py-2 transition-colors">
-                Sign In
+                className="hidden sm:block text-sm font-black uppercase tracking-widest dark:text-white/60 text-dark-400 dark:hover:text-white hover:text-dark-900 px-5 py-2 transition-colors">
+                Login
               </Link>
-              <Button size="sm" onClick={() => navigate('/register')} rightIcon="arrow">
-                Get Started
+              <Button size="md" onClick={() => navigate('/register')} rightIcon="arrow">
+                Join
               </Button>
-            </>
+            </div>
           )}
 
           {/* Mobile hamburger */}
           <button
             onClick={() => setMobileOpen(o => !o)}
-            className="md:hidden w-9 h-9 rounded-xl dark:bg-dark-600 bg-light-100 flex items-center justify-center dark:text-dark-100 text-dark-400"
+            className="md:hidden w-10 h-10 rounded-2xl dark:bg-white/5 bg-black/5 border dark:border-white/10 border-black/5 flex items-center justify-center dark:text-white text-dark-900"
           >
-            <Icon name={mobileOpen ? 'x' : 'menu'} size={17} />
+            <Icon name={mobileOpen ? 'x' : 'menu'} size={18} />
           </button>
         </div>
       </div>
 
       {/* ── Mobile dropdown ── */}
-      {mobileOpen && (
-        <div className="md:hidden dark:bg-dark-800 bg-white dark:border-dark-600 border-light-200 border-t px-5 py-4 space-y-1 animate-fade-in">
-          {NAV_LINKS.map(link => (
-            <NavLink key={link.to} to={link.to} end={link.to === '/'}
-              className={({ isActive }) => cn(
-                'flex items-center px-4 py-3 rounded-xl text-sm font-medium transition-all',
-                isActive ? 'text-green bg-green/10' : 'dark:text-dark-100 text-dark-400 dark:hover:bg-dark-600 hover:bg-light-100',
+      <AnimatePresence>
+        {mobileOpen && (
+          <motion.div 
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="md:hidden dark:bg-dark-900 bg-white border-t dark:border-white/5 border-black/5 overflow-hidden shadow-2xl"
+          >
+            <div className="px-6 py-6 space-y-2">
+              {NAV_LINKS.map(link => (
+                <NavLink key={link.to} to={link.to} end={link.to === '/'}
+                  className={({ isActive }) => cn(
+                    'flex items-center px-5 py-4 rounded-2xl text-sm font-bold transition-all',
+                    isActive ? 'text-black bg-green shadow-lg shadow-green/20' : 'dark:text-white/60 text-dark-400 dark:hover:bg-white/5 hover:bg-light-100',
+                  )}
+                >
+                  {link.label}
+                </NavLink>
+              ))}
+              {!user && (
+                <div className="pt-6 mt-4 border-t dark:border-white/5 border-black/5 flex flex-col gap-3">
+                  <Link to="/login" className="text-sm font-black uppercase tracking-widest dark:text-white/60 text-dark-400 px-5 py-3">Login</Link>
+                  <Button size="xl" fullWidth onClick={() => navigate('/register')}>Join Now</Button>
+                </div>
               )}
-            >
-              {link.label}
-            </NavLink>
-          ))}
-          {!user && (
-            <div className="pt-3 border-t dark:border-dark-600 border-light-200 flex flex-col gap-2">
-              <Link to="/login" className="text-sm font-semibold dark:text-dark-100 text-dark-400 px-4 py-2.5">Sign In</Link>
-              <Button size="md" fullWidth onClick={() => navigate('/register')}>Get Started</Button>
             </div>
-          )}
-        </div>
-      )}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </header>
   );
 }
@@ -144,23 +164,25 @@ const FOOTER_LINKS = {
 
 function Footer() {
   return (
-    <footer className="dark:bg-dark-900 bg-light-50 dark:border-t dark:border-dark-700 border-t border-light-200">
-      <div className="max-w-7xl mx-auto px-5 py-14">
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-10 mb-12">
+    <footer className="dark:bg-dark-950 bg-light-50 dark:border-t dark:border-white/5 border-t border-black/5">
+      <div className="max-w-7xl mx-auto px-6 py-20">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-16 mb-20">
           {/* Brand column */}
           <div className="col-span-2">
-            <Link to="/" className="flex items-center gap-2 mb-5">
-              <div className="w-8 h-8 rounded-lg bg-green flex items-center justify-center font-display font-bold text-black text-sm">N</div>
-              <span className="font-display font-bold text-xl">Night<span className="text-green">Out</span></span>
+            <Link to="/" className="flex items-center gap-3 mb-8">
+              <div className="w-10 h-10 rounded-2xl flex items-center justify-center">
+                <img src="/logo.png" alt="NightOut Logo" className="w-full h-full object-contain" />
+              </div>
+              <span className="font-display font-black text-2xl tracking-tighter dark:text-white text-dark-900">Night<span className="text-green">Out</span></span>
             </Link>
-            <p className="text-sm dark:text-dark-100 text-dark-400 leading-relaxed max-w-xs mb-6">
-              India's complete nightlife operating system — discover, book, and experience the night safely.
+            <p className="text-lg dark:text-dark-100 text-dark-400 leading-relaxed max-w-sm mb-10">
+              India's premium nightlife operating system. Discover the elite, book the best, and experience the night safely.
             </p>
-            <div className="flex gap-3">
+            <div className="flex gap-4">
               {['twitter', 'instagram', 'linkedin'].map(s => (
                 <a key={s} href="#" aria-label={s}
-                  className="w-9 h-9 rounded-xl dark:bg-dark-600 bg-light-100 flex items-center justify-center dark:text-dark-100 text-dark-400 hover:text-green hover:dark:bg-dark-500 transition-all">
-                  <Icon name="external-link" size={13} />
+                  className="w-11 h-11 rounded-2xl dark:bg-white/5 bg-black/5 border dark:border-white/10 border-black/5 flex items-center justify-center dark:text-white/40 text-dark-400 dark:hover:text-green hover:text-green dark:bg-white/10 hover:bg-black/10 transition-all duration-300">
+                  <Icon name="external-link" size={16} />
                 </a>
               ))}
             </div>
@@ -169,11 +191,11 @@ function Footer() {
           {/* Link columns */}
           {Object.entries(FOOTER_LINKS).map(([section, links]) => (
             <div key={section}>
-              <div className="label-sm dark:text-dark-100 text-dark-400 mb-4">{section}</div>
-              <ul className="space-y-3">
+              <div className="text-[10px] font-black uppercase tracking-[0.2em] dark:text-white/30 text-dark-400/50 mb-8">{section}</div>
+              <ul className="space-y-4">
                 {links.map(link => (
                   <li key={link.to}>
-                    <Link to={link.to} className="text-sm dark:text-dark-100 text-dark-400 hover:text-green transition-colors">
+                    <Link to={link.to} className="text-sm font-medium dark:text-dark-100 text-dark-400 hover:text-green transition-colors">
                       {link.l}
                     </Link>
                   </li>
@@ -184,11 +206,11 @@ function Footer() {
         </div>
 
         {/* Bottom bar */}
-        <div className="dark:border-t dark:border-dark-700 border-t border-light-200 pt-6 flex flex-col sm:flex-row justify-between items-center gap-3 text-xs dark:text-dark-100 text-dark-400">
-          <span>© 2026 NightOut Technologies Pvt. Ltd. All rights reserved.</span>
-          <div className="flex items-center gap-1.5">
-            <span className="w-1.5 h-1.5 bg-green rounded-full animate-blink" />
-            <span>All systems operational</span>
+        <div className="pt-10 border-t dark:border-white/5 border-black/5 flex flex-col sm:flex-row justify-between items-center gap-6 text-[10px] font-bold uppercase tracking-widest text-dark-100">
+          <span>© 2026 NightOut Technologies Pvt. Ltd.</span>
+          <div className="flex items-center gap-3 dark:bg-white/5 bg-black/5 px-4 py-2 rounded-full border dark:border-white/10 border-black/5">
+            <span className="w-1.5 h-1.5 bg-green rounded-full animate-pulse shadow-[0_0_8px_rgba(0,200,83,0.8)]" />
+            <span className="dark:text-white/60 text-dark-400">All systems operational</span>
           </div>
         </div>
       </div>
@@ -198,11 +220,27 @@ function Footer() {
 
 // ── LAYOUT WRAPPER ─────────────────────────────────────────────────────────────
 export default function PublicLayout({ children }) {
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
+
   return (
-    <div className="min-h-screen flex flex-col dark:bg-dark-900 bg-light-50">
+    <div className="min-h-screen flex flex-col dark:bg-dark-900 bg-light-50 selection:bg-green selection:text-black">
       <Navbar />
-      <main className="flex-1 pt-16">
-        {children}
+      <main className="flex-1">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={pathname}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+          >
+            {children}
+          </motion.div>
+        </AnimatePresence>
       </main>
       <Footer />
     </div>

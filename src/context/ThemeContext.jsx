@@ -5,10 +5,10 @@ const ThemeContext = createContext(null);
 export function ThemeProvider({ children }) {
   const [dark, setDark] = useState(() => {
     try {
-      const stored = localStorage.getItem('nightout-theme');
+      const stored = localStorage.getItem('nightout-theme-v2');
       if (stored) return stored === 'dark';
     } catch {}
-    return window.matchMedia?.('(prefers-color-scheme: dark)').matches ?? true;
+    return true; // Default to dark mode on startup
   });
 
   useEffect(() => {
@@ -22,7 +22,7 @@ export function ThemeProvider({ children }) {
       document.body.classList.remove('bg-dark-900', 'text-white');
       document.body.classList.add('bg-light-50', 'text-dark-900');
     }
-    try { localStorage.setItem('nightout-theme', dark ? 'dark' : 'light'); } catch {}
+    try { localStorage.setItem('nightout-theme-v2', dark ? 'dark' : 'light'); } catch {}
   }, [dark]);
 
   const toggle = () => setDark(d => !d);
