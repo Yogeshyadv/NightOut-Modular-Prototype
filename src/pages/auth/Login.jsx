@@ -98,9 +98,13 @@ export default function Login() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!email || !pass) return;
-    const res = await login(email, pass, role);
-    if (res.success) navigate(role === 'admin' ? '/admin/dashboard' : '/vendor/dashboard');
+    const res = await login(email, pass);
+    if (res.success) {
+      const targetRole = res.user.role;
+      navigate(targetRole === 'admin' ? '/admin/dashboard' : '/vendor/dashboard');
+    }
   };
+
 
   return (
     <AuthShell title="Welcome back" subtitle="Sign in to your NightOut account">

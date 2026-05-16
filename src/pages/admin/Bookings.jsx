@@ -6,23 +6,30 @@ import {
   StatCard, PageHeader, Button, StatusPill, InfoRow, Modal,
 } from '../../components/ui/index.js';
 import Table            from '../../components/ui/Table.jsx';
-import { BOOKINGS }     from '../../data/mockData.js';
-import { fmt }          from '../../utils/helpers.js';
-
-// Augment with city and extra entries
-const ALL_BOOKINGS = [
-  ...BOOKINGS.map(b => ({ ...b, city: b.city ?? 'Jaipur' })),
-  { id:'NO-2026-84739', guest:'Ravi Patel',    phone:'+91 11122 33344', venue:'Neon Lounge',  city:'Delhi',     type:'Couple',    guests:2, amount:2400,  commission:120,  status:'Confirmed',  date:'2026-03-25', time:'—',       payment:'UPI'  },
-  { id:'NO-2026-84740', guest:'Zara Ahmed',    phone:'+91 55566 77788', venue:'Pulse Club',   city:'Bengaluru', type:'Stag',      guests:1, amount:1800,  commission:90,   status:'Checked In', date:'2026-03-25', time:'9:45 PM', payment:'Card' },
-  { id:'NO-2026-84741', guest:'Karan Singh',   phone:'+91 99988 77766', venue:'Skybar 22',    city:'Jaipur',    type:'Group',     guests:8, amount:14400, commission:720,  status:'Confirmed',  date:'2026-03-27', time:'—',       payment:'Bank Transfer' },
-  { id:'NO-2026-84742', guest:'Meera Nair',    phone:'+91 77766 55544', venue:'Beat Factory', city:'Mumbai',    type:'Couple',    guests:2, amount:2100,  commission:105,  status:'No-Show',    date:'2026-03-24', time:'—',       payment:'UPI'  },
-];
+import { useAdminBookings } from '../../hooks/useAdminData.js';
 
 export default function AdminBookings() {
+  const { bookings: rawBookings, loading } = useAdminBookings();
   const [selected, setSelected] = useState(null);
 
-  const totalGMV  = ALL_BOOKINGS.reduce((s,b) => s + b.amount, 0);
-  const totalComm = ALL_BOOKINGS.reduce((s,b) => s + (b.commission||0), 0);
+  const bookings = rawBookings.map(b => ({
+    ...b,
+    id: b._id,
+    guest: b.user?.name || 'Unknown Guest',
+    phone: b.user?.email || '—',
+    venueName: b.venue?.name || 'Deleted Venue',
+    city: b.venue?.location || '—',
+    type: b.tickets?.type || 'Standard',
+    guests: b.tickets?.quantity || 1,
+    amount: b.totalPrice,
+    commission: b.totalPrice * 0.15,
+    date: new Date(b.bookingDate).toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric' }),
+    status: b.status === 'upcoming' ? 'Confirmed' : b.status === 'completed' ? 'Checked In' : b.status === 'cancelled' ? 'Cancelled' : b.status
+  }));
+
+  const totalGMV  = bookings.reduce((s,b) => s + b.amount, 0);
+  const totalComm = bookings.reduce((s,b) => s + (b.commission||0), 0);
+
 
   const columns = [
     { key:'id',     label:'Booking ID', width:'150px', render: v => <span className="font-mono text-xs dark:text-dark-100 text-dark-400">{v}</span> },
@@ -30,7 +37,8 @@ export default function AdminBookings() {
         <div><div className="text-sm font-bold">{v}</div><div className="text-[11px] dark:text-dark-100 text-dark-400">{row.phone}</div></div>
       )
     },
-    { key:'venue',  label:'Venue',      render: v => <span className="dark:text-dark-100 text-dark-400">{v}</span> },
+    { key:'venueName',  label:'Venue',      render: v => <span className="dark:text-dark-100 text-dark-400">{v}</span> },
+
     { key:'city',   label:'City',       render: v => <span className="dark:text-dark-100 text-dark-400">{v}</span> },
     { key:'type',   label:'Type' },
     { key:'guests', label:'Guests',     render: v => <span className="font-semibold">{v}</span> },
@@ -46,26 +54,28 @@ export default function AdminBookings() {
       <PageHeader title="Booking Oversight" subtitle="All bookings across the platform" />
 
       <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
-        <StatCard icon="calendar" label="Total Bookings" value={ALL_BOOKINGS.length}                          accent="green"  />
+        <StatCard icon="calendar" label="Total Bookings" value={bookings.length}                          accent="green"  />
         <StatCard icon="💰"       label="Total GMV"      value={fmt.shortCurrency(totalGMV)}                  accent="gold"   />
         <StatCard icon="💼"       label="Commission"     value={fmt.currency(totalComm)}                       accent="purple" />
-        <StatCard icon="❌"       label="No-Shows"       value={ALL_BOOKINGS.filter(b=>b.status==='No-Show').length} accent="danger" changeUp={false} />
+        <StatCard icon="❌"       label="Cancelled"       value={bookings.filter(b=>b.status==='Cancelled').length} accent="danger" changeUp={false} />
       </div>
 
       <Table
-        data={ALL_BOOKINGS}
+        data={bookings}
         columns={columns}
+        loading={loading}
         searchable
         searchPlaceholder="Search by guest, venue, city, booking ID…"
-        searchKeys={['guest','venue','city','id','phone']}
+        searchKeys={['guest','venueName','city','id','phone']}
         filters={[
-          { key:'status', label:'All Status', options:['Confirmed','Checked In','No-Show','Pending','Cancelled'].map(s=>({value:s,label:s})) },
+          { key:'status', label:'All Status', options:['Confirmed','Checked In','Cancelled','Pending'].map(s=>({value:s,label:s})) },
           { key:'city',   label:'All Cities', options:['Jaipur','Delhi','Mumbai','Bengaluru'].map(c=>({value:c,label:c})) },
           { key:'type',   label:'All Types',  options:['Stag','Couple','Group','VIP Table'].map(t=>({value:t,label:t})) },
         ]}
         onRowClick={setSelected}
         emptyIcon="📅" emptyTitle="No bookings found" pageSize={10}
       />
+
 
       <Modal open={!!selected} onClose={() => setSelected(null)} title="Booking Details" subtitle={selected?.id} size="md">
         {selected && (

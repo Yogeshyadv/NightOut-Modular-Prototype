@@ -5,17 +5,18 @@ import {
   AreaChart, Area, BarChart, Bar, XAxis, YAxis,
   CartesianGrid, Tooltip, ResponsiveContainer,
 } from 'recharts';
+import { useAdminAnalytics } from '../../hooks/useAdminAnalytics.js';
 import {
   StatCard, Card, PageHeader, ProgressBar, StatusPill,
 } from '../../components/ui/index.js';
-import { ADMIN_REVENUE_DAILY, PLATFORM_VENDORS, TOP_VENUES } from '../../data/mockData.js';
 import { fmt } from '../../utils/helpers.js';
+
 
 const ChartTip = ({ active, payload, label }) => {
   if (!active || !payload?.length) return null;
   return (
     <div className="dark:bg-dark-600 bg-white dark:border-dark-400 border-light-200 border rounded-xl px-3 py-2 text-xs shadow-card">
-      <div className="font-bold mb-1">Day {label}</div>
+      <div className="font-bold mb-1">{label}</div>
       {payload.map((p, i) => (
         <div key={i} style={{ color: p.color }}>
           {p.name}: <span className="font-bold">{fmt.shortCurrency(p.value)}</span>
@@ -25,32 +26,52 @@ const ChartTip = ({ active, payload, label }) => {
   );
 };
 
-const CITY_REVENUE = [
-  { city:'Jaipur',    revenue:3120000, pct:65, color:'#00C853'  },
-  { city:'Delhi',     revenue:980000,  pct:20, color:'#7C4DFF'  },
-  { city:'Mumbai',    revenue:720000,  pct:15, color:'#00E5FF'  },
-];
-
 export default function AdminRevenue() {
-  const totalGMV  = ADMIN_REVENUE_DAILY.reduce((s,d) => s + d.revenue, 0);
-  const totalComm = ADMIN_REVENUE_DAILY.reduce((s,d) => s + d.commission, 0);
-  const activeVendors = PLATFORM_VENDORS.filter(v => v.status === 'Active');
+  const { stats, loading } = useAdminAnalytics();
+
+  if (loading && !stats) return <div className="p-20 text-center animate-pulse">Loading revenue metrics...</div>;
+
+  const totalGMV  = stats?.totalRevenue || 0;
+  const totalComm = totalGMV * 0.15; // Platform fee 15%
+  
+  const chartData = stats?.weeklyGrowth?.map(g => ({
+    day: g.day,
+    revenue: g.revenue,
+    commission: g.revenue * 0.15
+  })) || [];
+
+  const cityRevenue = stats?.revenueByCity?.map(c => ({
+    city: c._id || 'Other',
+    revenue: c.revenue,
+    pct: totalGMV ? Math.round((c.revenue / totalGMV) * 100) : 0,
+    color: '#00C853'
+  })) || [];
+
+  const topVenues = stats?.topVenues?.map(v => ({
+    name: v.name,
+    city: v.city,
+    revenue: fmt.currency(v.revenue),
+    bookings: v.bookings,
+    trend: '+12%', // Simplified for now
+    trendUp: true
+  })) || [];
+
 
   return (
     <div className="p-6 space-y-6 animate-fade-up">
-      <PageHeader title="Revenue Analytics" subtitle="Platform earnings and commission — March 2026" />
+      <PageHeader title="Revenue Analytics" subtitle="Platform earnings and commission" />
 
       <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
-        <StatCard icon="💰"       label="Total GMV"       value={fmt.shortCurrency(totalGMV)}  change="+31% MoM" accent="gold"   />
-        <StatCard icon="💼"       label="Commission"      value={fmt.shortCurrency(totalComm)} change="+28%"     accent="purple" />
-        <StatCard icon="%"        label="Avg Rate"        value="5%"                            accent="green"  />
-        <StatCard icon="📈"       label="Avg Order Value" value="₹2,847"                        change="+12%"    accent="info"   />
+        <StatCard icon="💰"       label="Total GMV"       value={fmt.shortCurrency(totalGMV)}  change="Live" accent="gold"   />
+        <StatCard icon="💼"       label="Commission (Est)" value={fmt.shortCurrency(totalComm)} change="15% Rate"     accent="purple" />
+        <StatCard icon="%"        label="Flat Rate"       value="15%"                           accent="green"  />
+        <StatCard icon="📈"       label="Platform Growth" value="Live"                        change="Up"    accent="info"   />
       </div>
 
       {/* GMV vs Commission chart */}
-      <Card title="GMV vs Commission (Daily)" subtitle="March 2026 platform earnings">
+      <Card title="Revenue Growth (Weekly)" subtitle="Platform earnings trend">
         <ResponsiveContainer width="100%" height={260}>
-          <AreaChart data={ADMIN_REVENUE_DAILY} margin={{ top:4, right:4, bottom:0, left:0 }}>
+          <AreaChart data={chartData} margin={{ top:4, right:4, bottom:0, left:0 }}>
             <defs>
               <linearGradient id="rGmv" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="5%"  stopColor="#7C4DFF" stopOpacity={0.28} />
@@ -72,11 +93,12 @@ export default function AdminRevenue() {
         </ResponsiveContainer>
       </Card>
 
+
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
         {/* City breakdown */}
         <Card title="Revenue by City">
           <div className="space-y-5">
-            {CITY_REVENUE.map(c => (
+            {cityRevenue.map(c => (
               <div key={c.city}>
                 <div className="flex justify-between text-sm mb-2">
                   <span className="font-semibold">{c.city}</span>
@@ -89,6 +111,7 @@ export default function AdminRevenue() {
                 </div>
               </div>
             ))}
+            {cityRevenue.length === 0 && <div className="text-center py-10 opacity-40">No city data available</div>}
           </div>
         </Card>
 
@@ -103,7 +126,7 @@ export default function AdminRevenue() {
               </tr>
             </thead>
             <tbody>
-              {TOP_VENUES.map((v, i) => (
+              {topVenues.map((v, i) => (
                 <tr key={v.name} className="border-b dark:border-dark-400/50 border-light-200/70 last:border-0">
                   <td className="px-5 py-3.5">
                     <span className={`font-display font-bold text-sm ${i===0 ? 'text-gold' : 'dark:text-dark-100 text-dark-400'}`}>#{i+1}</span>
@@ -117,10 +140,14 @@ export default function AdminRevenue() {
                   <td className="px-5 py-3.5 text-sm font-bold" style={{ color: v.trendUp ? '#00C853' : '#FF5252' }}>{v.trend}</td>
                 </tr>
               ))}
+              {topVenues.length === 0 && (
+                <tr><td colSpan={5} className="py-10 text-center opacity-40">No venues found</td></tr>
+              )}
             </tbody>
           </table>
         </Card>
       </div>
+
 
       {/* Vendor commission ledger */}
       <Card title="Vendor Commission Ledger" subtitle="Active vendors — March 2026" noPad>

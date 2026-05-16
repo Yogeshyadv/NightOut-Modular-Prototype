@@ -5,7 +5,8 @@ import { useState } from 'react';
 import { Link, useNavigate }     from 'react-router-dom';
 import { motion, AnimatePresence }    from 'framer-motion';
 import { Button, Icon, SectionLabel } from '../../components/ui/index.js';
-import { PRICING_PLANS }              from '../../data/mockData.js';
+import { PRICING_PLANS }              from '../../config/constants.js';
+
 import { cn }                         from '../../utils/helpers.js';
 
 const COMPARISON = [

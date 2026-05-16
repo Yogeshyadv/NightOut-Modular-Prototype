@@ -5,43 +5,9 @@ import { useState } from 'react';
 import { NavLink, useNavigate, Link } from 'react-router-dom';
 import { useTheme } from '../../context/ThemeContext.jsx';
 import { useAuth }  from '../../context/AuthContext.jsx';
+import { useNotifications } from '../../hooks/useNotifications.js';
 import { Icon, Avatar, Button } from '../ui/index.js';
 import { cn } from '../../utils/helpers.js';
-
-// ── NAV CONFIG ────────────────────────────────────────────────────────────────
-const VENDOR_NAV = [
-  { section: 'Main',        items: [{ to: '/vendor/dashboard',      icon: 'home',         label: 'Dashboard'    }] },
-  { section: 'Operations',  items: [
-    { to: '/vendor/venues',    icon: 'building',     label: 'Venues'       },
-    { to: '/vendor/bookings',  icon: 'calendar',     label: 'Bookings',   badge: 3 },
-    { to: '/vendor/guests',    icon: 'users',        label: 'Guestlist'    },
-    { to: '/vendor/scanner',   icon: 'qr',           label: 'QR Scanner'   },
-  ]},
-  { section: 'Insights',    items: [
-    { to: '/vendor/analytics',     icon: 'chart',    label: 'Analytics'    },
-    { to: '/vendor/notifications', icon: 'bell',     label: 'Notifications', badge: 2 },
-  ]},
-  { section: 'Account',     items: [{ to: '/vendor/settings',       icon: 'settings',     label: 'Settings'     }] },
-];
-
-const ADMIN_NAV = [
-  { section: 'Overview',    items: [
-    { to: '/admin/dashboard', icon: 'home',           label: 'Dashboard'    },
-    { to: '/admin/activity',  icon: 'zap',            label: 'Activity Feed' },
-  ]},
-  { section: 'Management',  items: [
-    { to: '/admin/vendors',   icon: 'building',       label: 'Vendors',     badge: 2 },
-    { to: '/admin/users',     icon: 'users',          label: 'Users'        },
-    { to: '/admin/bookings',  icon: 'calendar',       label: 'Bookings'     },
-  ]},
-  { section: 'Finance',     items: [
-    { to: '/admin/revenue',   icon: 'trending-up',    label: 'Revenue'      },
-  ]},
-  { section: 'Platform',    items: [
-    { to: '/admin/moderation',icon: 'shield',         label: 'Moderation',  badge: 1 },
-    { to: '/admin/settings',  icon: 'settings',       label: 'Settings'     },
-  ]},
-];
 
 // ── NAV ITEM (expanded) ───────────────────────────────────────────────────────
 function NavItem({ to, icon, label, badge, isAdmin }) {
@@ -59,8 +25,8 @@ function NavItem({ to, icon, label, badge, isAdmin }) {
         <>
           <Icon name={icon} size={15} strokeWidth={isActive ? 2.2 : 1.8} className="flex-shrink-0" />
           <span className="flex-1 truncate">{label}</span>
-          {badge != null && (
-            <span className="bg-danger text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none">
+          {badge > 0 && (
+            <span className="bg-danger text-white text-[10px] font-black px-1.5 py-0.5 rounded-full leading-none min-w-[18px] text-center">
               {badge}
             </span>
           )}
@@ -71,16 +37,19 @@ function NavItem({ to, icon, label, badge, isAdmin }) {
 }
 
 // ── NAV ITEM (collapsed / icon-only) ─────────────────────────────────────────
-function NavIconOnly({ to, icon, label, isAdmin }) {
+function NavIconOnly({ to, icon, label, isAdmin, badge }) {
   return (
     <NavLink to={to} title={label}
       className={({ isActive }) => cn(
-        'flex items-center justify-center h-10 w-10 mx-auto rounded-xl transition-all',
+        'flex items-center justify-center h-10 w-10 mx-auto rounded-xl transition-all relative',
         isActive
           ? isAdmin ? 'text-purple-light bg-purple/10' : 'text-green bg-green/10'
           : 'text-dark-100 hover:text-white hover:bg-white/[0.06]',
       )}>
       <Icon name={icon} size={17} />
+      {badge > 0 && (
+        <span className="absolute top-1 right-1 w-2 h-2 bg-danger rounded-full border-2 dark:border-dark-800 border-white" />
+      )}
     </NavLink>
   );
 }
@@ -88,13 +57,69 @@ function NavIconOnly({ to, icon, label, isAdmin }) {
 // ── MAIN LAYOUT ───────────────────────────────────────────────────────────────
 export default function DashboardLayout({ children, role = 'vendor' }) {
   const { dark, toggle } = useTheme();
-  const { user, logout } = useAuth();
+  const { user, logout, refreshUser } = useAuth();
+  const { notifications, unreadCount, markAllRead, markRead } = useNotifications();
   const navigate         = useNavigate();
   const [collapsed,    setCollapsed]    = useState(false);
   const [notifOpen,    setNotifOpen]    = useState(false);
 
   const isAdmin  = role === 'admin';
-  const navItems = isAdmin ? ADMIN_NAV : VENDOR_NAV;
+
+  const VENDOR_NAV = [
+    { section: 'Main',        items: [{ to: '/vendor/dashboard',      icon: 'home',         label: 'Dashboard'    }] },
+    { section: 'Operations',  items: [
+      { to: '/vendor/venues',    icon: 'building',     label: 'Venues'       },
+      { to: '/vendor/bookings',  icon: 'calendar',     label: 'Bookings'    },
+      { to: '/vendor/guests',    icon: 'users',        label: 'Guestlist'    },
+      { to: '/vendor/scanner',   icon: 'qr',           label: 'QR Scanner'   },
+    ]},
+    { section: 'Insights',    items: [
+      { to: '/vendor/analytics',     icon: 'chart',    label: 'Analytics'    },
+      { to: '/vendor/wallet',        icon: 'wallet',   label: 'Wallet'       },
+      { to: '/vendor/notifications', icon: 'bell',     label: 'Notifications' },
+    ]},
+    { section: 'Account',     items: [
+      { to: '/vendor/verification',   icon: 'shield',       label: 'Verification' },
+      { to: '/vendor/settings',       icon: 'settings',     label: 'Settings'     }
+    ]},
+  ];
+
+  const ADMIN_NAV = [
+    { section: 'Overview',    items: [
+      { to: '/admin/dashboard', icon: 'home',           label: 'Dashboard'    },
+      { to: '/admin/activity',  icon: 'zap',            label: 'Activity Feed' },
+    ]},
+    { section: 'Management',  items: [
+      { to: '/admin/vendors',   icon: 'building',       label: 'Vendors'      },
+      { to: '/admin/users',     icon: 'users',          label: 'Users'        },
+      { to: '/admin/bookings',  icon: 'calendar',       label: 'Bookings'     },
+    ]},
+    { section: 'Finance',     items: [
+      { to: '/admin/revenue',   icon: 'trending-up',    label: 'Revenue'      },
+      { to: '/admin/payouts',   icon: 'wallet',         label: 'Payouts'      },
+    ]},
+    { section: 'Platform',    items: [
+      { to: '/admin/moderation',icon: 'shield',         label: 'Moderation'   },
+      { to: '/admin/verifications', icon: 'check',      label: 'Verifications' },
+      { to: '/admin/settings',  icon: 'settings',       label: 'Settings'     },
+    ]},
+  ];
+
+  const getBadge = (to) => {
+    if (to.includes('notifications')) return unreadCount;
+    if (isAdmin && to === '/admin/verifications') {
+       return notifications.filter(n => !n.isRead && n.type === 'verification_applied').length;
+    }
+    if (!isAdmin && to === '/vendor/verification' && !user?.isVerified) {
+       return notifications.filter(n => !n.isRead && (n.type === 'verification_approved' || n.type === 'verification_rejected')).length;
+    }
+    return 0;
+  };
+
+  const navItems = (isAdmin ? ADMIN_NAV : VENDOR_NAV).map(section => ({
+    ...section,
+    items: section.items.map(i => ({ ...i, badge: getBadge(i.to) || i.badge }))
+  }));
 
   const accentText  = isAdmin ? 'text-purple-light' : 'text-green';
   const accentBg    = isAdmin ? 'bg-purple'          : 'bg-green';
@@ -102,174 +127,148 @@ export default function DashboardLayout({ children, role = 'vendor' }) {
 
   const handleLogout = () => { logout(); navigate('/login'); };
 
-  const NOTIFS = [
-    { icon: '🎟️', msg: 'New booking: Rahul Sharma',      time: '2 min ago', unread: true  },
-    { icon: '⭐',  msg: 'Priya M. left a 5-star review',  time: '1 hr ago',  unread: true  },
-    { icon: '⚠️', msg: 'Pricing reminder for Friday',     time: '3 hr ago',  unread: false },
-  ];
-
   return (
-    <div className="flex h-screen dark:bg-dark-900 bg-light-50 overflow-hidden">
-
-      {/* ── Sidebar ── */}
-      <aside
-        className={cn(
-          'flex flex-col flex-shrink-0 h-full transition-all duration-300',
-          'dark:bg-dark-800 bg-white dark:border-r dark:border-dark-600 border-r border-light-200',
-          collapsed ? 'w-[68px]' : 'w-64',
-        )}
-      >
+    <div className={cn("min-h-screen flex", dark ? "dark bg-dark-900" : "bg-light-50")}>
+      {/* SIDEBAR */}
+      <aside className={cn(
+        "fixed inset-y-0 left-0 z-50 flex flex-col transition-all duration-300 border-r",
+        dark ? "bg-dark-800 border-dark-400" : "bg-white border-light-200 shadow-xl",
+        collapsed ? "w-20" : "w-64"
+      )}>
         {/* Brand */}
-        <div className="h-14 flex items-center justify-between px-4 border-b dark:border-dark-600 border-light-200 flex-shrink-0">
+        <div className="h-20 flex items-center px-6 gap-3 mb-2">
+          <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center shrink-0 shadow-lg", accentBg)}>
+            <Icon name="zap" size={20} className="text-black" />
+          </div>
           {!collapsed && (
-            <Link to={isAdmin ? '/admin/dashboard' : '/vendor/dashboard'} className="flex items-center gap-2 overflow-hidden">
-              <div className={cn('w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden', isAdmin ? 'ring-2 ring-purple/50' : 'ring-2 ring-green/50')}>
-                <img src="/logo.png" alt="NightOut" className="w-full h-full object-contain" />
-              </div>
-              <div className="min-w-0">
-                <div className="font-display font-bold text-sm leading-tight">NightOut</div>
-                <div className="text-[10px] dark:text-dark-100 text-dark-400 leading-tight">{isAdmin ? 'Admin Portal' : 'Vendor Portal'}</div>
-              </div>
-            </Link>
-          )}
-          {collapsed && (
-            <div className={cn('w-7 h-7 rounded-lg mx-auto flex items-center justify-center overflow-hidden', isAdmin ? 'ring-2 ring-purple/50' : 'ring-2 ring-green/50')}>
-              <img src="/logo.png" alt="NightOut" className="w-full h-full object-contain" />
+            <div className="font-display font-black text-xl tracking-tight">
+              Night<span className={accentText}>Out</span>
             </div>
           )}
-          <button
-            onClick={() => setCollapsed(c => !c)}
-            className={cn(
-              'text-dark-100 hover:text-white p-1.5 rounded-lg hover:bg-white/[0.06] transition-all flex-shrink-0',
-              collapsed && 'mx-auto',
-            )}
-          >
-            <Icon name={collapsed ? 'chevron-right' : 'chevron-left'} size={14} />
-          </button>
         </div>
 
-        {/* User chip */}
-        {!collapsed && user && (
-          <div className="px-4 py-3 border-b dark:border-dark-600 border-light-200">
-            <div className="flex items-center gap-3 p-2.5 dark:bg-dark-700 bg-light-50 rounded-xl">
-              <Avatar name={user.name} size={32} accent={isAdmin ? 'purple' : 'green'} />
-              <div className="overflow-hidden">
-                <div className="text-sm font-semibold truncate">{user.name}</div>
-                <div className="text-[11px] dark:text-dark-100 text-dark-400 truncate">{user.business || user.email}</div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Nav sections */}
-        <nav className="flex-1 overflow-y-auto no-scrollbar px-3 py-3 space-y-4">
-          {navItems.map(section => (
-            <div key={section.section}>
+        {/* Nav Items */}
+        <div className="flex-1 overflow-y-auto px-4 py-2 custom-scrollbar">
+          {navItems.map((sec, idx) => (
+            <div key={idx} className="mb-6 last:mb-0">
               {!collapsed && (
-                <div className="text-[10px] font-bold uppercase tracking-[2px] dark:text-dark-100/50 text-dark-300 px-4 mb-1.5">
-                  {section.section}
+                <div className="px-4 mb-2 text-[10px] font-black uppercase tracking-widest opacity-30">
+                  {sec.section}
                 </div>
               )}
-              <div className="space-y-0.5">
-                {section.items.map(item =>
-                  collapsed
+              <div className="space-y-1">
+                {sec.items.map(item => (
+                  collapsed 
                     ? <NavIconOnly key={item.to} {...item} isAdmin={isAdmin} />
-                    : <NavItem    key={item.to} {...item} isAdmin={isAdmin} />
-                )}
+                    : <NavItem key={item.to} {...item} isAdmin={isAdmin} />
+                ))}
               </div>
             </div>
           ))}
-        </nav>
+        </div>
 
-        {/* Bottom actions */}
-        {!collapsed && (
-          <div className="px-3 py-3 border-t dark:border-dark-600 border-light-200 space-y-1">
-            <button
-              onClick={() => navigate(isAdmin ? '/vendor/dashboard' : '/admin/dashboard')}
-              className={cn(
-                'w-full flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold transition-all',
-                isAdmin ? 'text-green bg-green/10 hover:bg-green/20' : 'text-purple-light bg-purple/10 hover:bg-purple/20',
-              )}
-            >
-              <Icon name="arrow" size={13} />
-              Switch to {isAdmin ? 'Vendor' : 'Admin'}
-            </button>
-            <button
-              onClick={handleLogout}
-              className="w-full flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold text-dark-100 hover:text-danger hover:bg-danger/5 transition-all"
-            >
-              <Icon name="logout" size={13} /> Logout
-            </button>
-          </div>
-        )}
+        {/* User / Bottom */}
+        <div className="p-4 border-t dark:border-dark-400 border-light-200">
+           {!collapsed ? (
+             <div className="flex items-center gap-3 p-3 dark:bg-dark-700 bg-light-50 rounded-2xl border dark:border-dark-500 border-light-200">
+               <Avatar name={user?.name} size={36} accent={isAdmin ? 'purple' : 'green'} />
+               <div className="flex-1 min-w-0">
+                 <div className="text-xs font-bold truncate">{user?.name}</div>
+                 <div className="text-[10px] opacity-50 truncate capitalize">{user?.role}</div>
+               </div>
+               <button onClick={handleLogout} className="p-1.5 hover:text-danger transition-colors">
+                 <Icon name="logout" size={16} />
+               </button>
+             </div>
+           ) : (
+             <button onClick={handleLogout} className="w-10 h-10 mx-auto flex items-center justify-center hover:text-danger transition-colors">
+               <Icon name="logout" size={18} />
+             </button>
+           )}
+        </div>
       </aside>
 
-      {/* ── Main area ── */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-
-        {/* Topbar */}
-        <header className="h-14 flex items-center justify-between px-6 dark:bg-dark-800/70 bg-white/80 backdrop-blur-xl dark:border-b dark:border-dark-600 border-b border-light-200 flex-shrink-0">
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-1.5">
-              <span className={cn('w-2 h-2 rounded-full', accentRing)} />
-              <span className={cn('text-xs font-semibold', accentText)}>Live</span>
+      {/* MAIN CONTENT */}
+      <main className={cn(
+        "flex-1 flex flex-col transition-all duration-300",
+        collapsed ? "ml-20" : "ml-64"
+      )}>
+        {/* TOP BAR */}
+        <header className={cn(
+          "h-20 flex items-center justify-between px-8 sticky top-0 z-40 backdrop-blur-md border-b transition-all",
+          dark ? "bg-dark-900/80 border-dark-400 text-white" : "bg-white/80 border-light-200 text-dark-900 shadow-sm"
+        )}>
+          <div className="flex items-center gap-4">
+            <button onClick={() => setCollapsed(!collapsed)} className="p-2 hover:dark:bg-dark-700 hover:bg-light-100 rounded-xl transition-all">
+              <Icon name="menu" size={20} />
+            </button>
+            <div className="hidden sm:flex items-center gap-2 text-sm">
+              <span className="opacity-40">Portal</span>
+              <span className="opacity-20">/</span>
+              <span className="font-bold capitalize">{role}</span>
             </div>
           </div>
 
-          <div className="flex items-center gap-2.5">
-            {/* Theme */}
-            <button
-              onClick={toggle}
-              className="w-9 h-9 rounded-xl dark:bg-dark-700 bg-light-100 flex items-center justify-center dark:text-dark-100 text-dark-400 hover:text-green transition-all"
-            >
-              <Icon name={dark ? 'sun' : 'moon'} size={15} />
-            </button>
-
-            {/* Notifications */}
-            <div className="relative">
-              <button
-                onClick={() => setNotifOpen(o => !o)}
-                className="w-9 h-9 rounded-xl dark:bg-dark-700 bg-light-100 flex items-center justify-center dark:text-dark-100 text-dark-400 hover:text-green transition-all relative"
-              >
-                <Icon name="bell" size={15} />
-                <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-danger rounded-full border-2 dark:border-dark-700 border-light-100" />
-              </button>
-
-              {notifOpen && (
-                <div className="absolute right-0 top-11 w-72 dark:bg-dark-700 bg-white dark:border-dark-500 border-light-200 border rounded-2xl shadow-card z-50 animate-fade-in overflow-hidden">
-                  <div className="flex items-center justify-between px-4 py-3 border-b dark:border-dark-600 border-light-200">
-                    <div className="text-sm font-bold">Notifications</div>
-                    <button className="text-xs text-green font-semibold hover:underline">Mark all read</button>
-                  </div>
-                  {NOTIFS.map((n, i) => (
-                    <div key={i} className={cn(
-                      'flex items-start gap-3 px-4 py-3 hover:dark:bg-dark-600 hover:bg-light-50 transition-colors cursor-pointer border-b dark:border-dark-600 border-light-200 last:border-0',
-                      n.unread && 'dark:bg-dark-700/60',
-                    )}>
-                      <span className="text-base mt-0.5 flex-shrink-0">{n.icon}</span>
-                      <div className="flex-1 min-w-0">
-                        <div className="text-sm font-medium truncate">{n.msg}</div>
-                        <div className="text-[11px] dark:text-dark-100 text-dark-400 mt-0.5">{n.time}</div>
-                      </div>
-                      {n.unread && <span className="w-2 h-2 bg-green rounded-full mt-1.5 flex-shrink-0" />}
+          <div className="flex items-center gap-3">
+             {/* Notif Trigger */}
+             <div className="relative">
+                <button onClick={() => setNotifOpen(!notifOpen)} 
+                  className="w-10 h-10 flex items-center justify-center hover:dark:bg-dark-700 hover:bg-light-100 rounded-xl transition-all relative">
+                  <Icon name="bell" size={19} />
+                  {unreadCount > 0 && (
+                    <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-green rounded-full shadow-glow" />
+                  )}
+                </button>
+                
+                {/* Mini Notif Dropdown */}
+                {notifOpen && (
+                  <>
+                    <div className="fixed inset-0 z-40" onClick={() => setNotifOpen(false)} />
+                    <div className="absolute right-0 mt-3 w-80 dark:bg-dark-700 bg-white dark:border-dark-400 border-light-200 border rounded-2xl shadow-2xl overflow-hidden z-50 animate-fade-in origin-top-right">
+                       <div className="px-5 py-4 border-b dark:border-dark-400 border-light-200 flex items-center justify-between">
+                         <span className="font-bold">Notifications</span>
+                         {unreadCount > 0 && <span className="text-[10px] bg-green text-black px-1.5 py-0.5 rounded-full font-black">{unreadCount} New</span>}
+                       </div>
+                       <div className="max-h-[300px] overflow-y-auto">
+                         {notifications.slice(0, 5).map(n => (
+                           <div key={n._id} onClick={() => { markRead(n._id); setNotifOpen(false); navigate(isAdmin ? '/admin/verifications' : '/vendor/notifications'); }} 
+                             className={cn("p-4 border-b dark:border-dark-400 border-light-200 last:border-0 hover:dark:bg-dark-600 hover:bg-light-50 cursor-pointer transition-colors", !n.isRead && "dark:bg-dark-600/50")}>
+                             <div className="text-[11px] font-bold mb-0.5">{n.title}</div>
+                             <div className="text-[10px] opacity-60 line-clamp-1">{n.message}</div>
+                           </div>
+                         ))}
+                         {notifications.length === 0 && <div className="p-10 text-center text-xs opacity-40">No alerts found</div>}
+                       </div>
+                       <Link to={isAdmin ? '/admin/activity' : '/vendor/notifications'} onClick={() => setNotifOpen(false)}
+                         className="block p-3 text-center text-[11px] font-bold dark:bg-dark-800 bg-light-100 hover:opacity-80">
+                         View All Notifications
+                       </Link>
                     </div>
-                  ))}
-                </div>
-              )}
-            </div>
+                  </>
+                )}
+             </div>
 
-            {/* Avatar */}
-            {user && (
-              <Avatar name={user.name} size={32} accent={isAdmin ? 'purple' : 'green'} />
-            )}
+             <button onClick={toggle} className="w-10 h-10 flex items-center justify-center hover:dark:bg-dark-700 hover:bg-light-100 rounded-xl transition-all">
+                <Icon name={dark ? 'sun' : 'moon'} size={19} />
+             </button>
+             
+             <div className="w-px h-6 mx-1 dark:bg-dark-400 bg-light-200" />
+             
+             <div className="flex items-center gap-3 pl-1">
+                <div className="text-right hidden md:block">
+                  <div className="text-xs font-bold">{user?.name}</div>
+                  <div className="text-[10px] opacity-40 capitalize">{user?.role}</div>
+                </div>
+                <Avatar name={user?.name} size={38} accent={isAdmin ? 'purple' : 'green'} />
+             </div>
           </div>
         </header>
 
-        {/* Page content */}
-        <main className="flex-1 overflow-y-auto">
+        {/* PAGE CONTENT */}
+        <div className="flex-1 overflow-y-auto bg-transparent relative">
           {children}
-        </main>
-      </div>
+        </div>
+      </main>
     </div>
   );
 }

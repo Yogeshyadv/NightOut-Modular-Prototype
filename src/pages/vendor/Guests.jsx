@@ -8,31 +8,30 @@ import {
 import Table            from '../../components/ui/Table.jsx';
 import { useToast }     from '../../hooks/useToast.js';
 import { ToastContainer } from '../../components/ui/Toast.jsx';
-import { BOOKINGS, VENUES } from '../../data/mockData.js';
-import { fmt }          from '../../utils/helpers.js';
-
-// Flatten bookings → individual guest rows
-const buildGuests = (bookings) =>
-  bookings.flatMap(b =>
-    Array.from({ length: b.guests }, (_, i) => ({
-      id:         `${b.id}-G${i}`,
-      name:       i === 0 ? b.guest : `Guest ${i + 1} (${b.id})`,
-      bookingId:  b.id,
-      venue:      b.venue,
-      date:       b.date,
-      type:       b.type,
-      status:     b.status,
-      checkinTime:b.time,
-      amount:     i === 0 ? b.amount : 0,
-    }))
-  );
+import { useBookings } from '../../hooks/useBookings.js';
 
 export default function Guests() {
+  const { bookings, loading, updateBookingStatus } = useBookings();
   const { toasts, show, dismiss } = useToast();
-  const [guests,      setGuests]      = useState(buildGuests(BOOKINGS));
   const [venueFilter, setVenueFilter] = useState('all');
 
-  const myVenues = ['all', ...new Set(BOOKINGS.map(b => b.venue))];
+  const guests = bookings.flatMap(b => {
+    const qty = b.tickets?.count || 1;
+    return Array.from({ length: qty }, (_, i) => ({
+      id: `${b._id}-G${i}`,
+      _id: b._id, // Keep original ID for API
+      name: i === 0 ? (b.user?.name || 'Guest') : `Guest ${i + 1} (${b._id.slice(-4)})`,
+      bookingId: b._id,
+      venue: b.venue?.name || 'Unknown',
+      date: new Date(b.bookingDate).toLocaleDateString('en-IN'),
+      type: b.tickets?.type || 'Standard',
+      status: b.status === 'upcoming' ? 'Confirmed' : b.status === 'completed' ? 'Checked In' : b.status === 'cancelled' ? 'Cancelled' : b.status,
+      checkinTime: b.status === 'completed' ? 'Arrived' : '—',
+      amount: i === 0 ? b.totalPrice : 0,
+    }));
+  });
+
+  const myVenues = ['all', ...new Set(bookings.map(b => b.venue?.name).filter(Boolean))];
 
   const visible = venueFilter === 'all'
     ? guests
@@ -40,16 +39,16 @@ export default function Guests() {
 
   const checkedIn = visible.filter(g => g.status === 'Checked In').length;
   const pending   = visible.filter(g => g.status === 'Confirmed').length;
-  const noShows   = visible.filter(g => g.status === 'No-Show').length;
+  const noShows   = visible.filter(g => g.status === 'No-Show' || g.status === 'Cancelled').length;
   const pct       = visible.length ? Math.round((checkedIn / visible.length) * 100) : 0;
 
-  const checkIn = (g) => {
-    const now = new Date().toLocaleTimeString('en-IN', { hour:'2-digit', minute:'2-digit' });
-    setGuests(gs => gs.map(x =>
-      x.id === g.id ? { ...x, status:'Checked In', checkinTime: now } : x
-    ));
-    show(`${g.name.split(' (')[0]} checked in at ${now}!`);
+  const checkIn = async (g) => {
+    const res = await updateBookingStatus(g._id, 'completed');
+    if (res.success) {
+      show(`${g.name.split(' (')[0]} checked in ✓`);
+    }
   };
+
 
   const columns = [
     {
@@ -130,6 +129,8 @@ export default function Guests() {
       <Table
         data={visible}
         columns={columns}
+        loading={loading}
+
         searchable
         searchPlaceholder="Search guests by name or booking ID…"
         searchKeys={['name','bookingId']}

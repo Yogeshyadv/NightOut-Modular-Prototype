@@ -5,7 +5,8 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate }           from 'react-router-dom';
 import { motion, AnimatePresence }    from 'framer-motion';
 import { Button, Icon, SectionLabel } from '../../components/ui/index.js';
-import { TESTIMONIALS, FAQ_ITEMS }    from '../../data/mockData.js';
+import { TESTIMONIALS, FAQ_ITEMS }    from '../../config/constants.js';
+
 import { cn }                         from '../../utils/helpers.js';
 
 import { useTheme }                  from '../../context/ThemeContext.jsx';

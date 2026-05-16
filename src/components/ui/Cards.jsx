@@ -118,21 +118,37 @@ export function VenueCard({ venue, onEdit, onDelete, onClick }) {
     >
       {/* Banner */}
       <div
-        className="h-36 flex items-center justify-center text-5xl relative"
-        style={{ background: `linear-gradient(135deg, ${venue.gradientFrom ?? '#0d001a'}, ${venue.gradientTo ?? '#1e0035'})` }}
+        className="h-40 flex items-center justify-center text-5xl relative"
+        style={{ 
+          background: !venue.images?.[0] 
+            ? `linear-gradient(135deg, ${venue.gradientFrom ?? '#0d001a'}, ${venue.gradientTo ?? '#1e0035'})` 
+            : 'none'
+        }}
       >
-        <span className="relative z-10">{venue.emoji}</span>
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/50" />
+        {venue.images?.[0] ? (
+          <img 
+            src={venue.images[0]} 
+            alt={venue.name} 
+            className="absolute inset-0 w-full h-full object-cover"
+          />
+        ) : (
+          <span className="relative z-10">{venue.emoji || '🏢'}</span>
+        )}
+        
+        <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/60" />
+        
         {venue.status && (
           <div className="absolute top-3 right-3 z-10">
             <StatusPill status={venue.status} />
           </div>
         )}
+        
         <div className="absolute bottom-3 left-4 right-4 z-10">
-          <div className="text-white text-sm font-bold truncate">{venue.name}</div>
-          <div className="text-white/70 text-xs">{venue.location}</div>
+          <div className="text-white text-sm font-bold truncate drop-shadow-md">{venue.name}</div>
+          <div className="text-white/80 text-[10px] uppercase tracking-wider font-semibold drop-shadow-sm">{venue.location}</div>
         </div>
       </div>
+
 
       {/* Body */}
       <div className="p-4">
@@ -183,6 +199,7 @@ export function VenueCard({ venue, onEdit, onDelete, onClick }) {
                   Delete
                 </button>
               )}
+
             </div>
           )}
         </div>

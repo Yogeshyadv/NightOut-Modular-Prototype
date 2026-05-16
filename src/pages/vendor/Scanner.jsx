@@ -1,66 +1,80 @@
 // ─────────────────────────────────────────────────────────────────────────────
 //  Vendor QR Scanner  —  mock scan simulation + manual code entry
 // ─────────────────────────────────────────────────────────────────────────────
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   StatCard, Card, PageHeader, Button, StatusPill, InfoRow, Icon,
 } from '../../components/ui/index.js';
 import { useToast }     from '../../hooks/useToast.js';
 import { ToastContainer } from '../../components/ui/Toast.jsx';
-import { BOOKINGS }     from '../../data/mockData.js';
 import { fmt }          from '../../utils/helpers.js';
+import api from '../../utils/api';
 
-// demo: short code → booking
-const CODE_MAP = { '847291': 0, '392847': 1, '918273': 2 };
 
 export default function Scanner() {
   const { toasts, show, dismiss } = useToast();
   const [scanning,   setScanning]   = useState(false);
   const [code,       setCode]       = useState('');
-  const [result,     setResult]     = useState(null); // null | { ok, booking? }
-  const [scanned,    setScanned]    = useState(23);
-  const [recentList, setRecentList] = useState([
-    { name:'Rahul Sharma',  time:'9:04 PM',  ok:true  },
-    { name:'Rohan Mehra',   time:'9:12 PM',  ok:true  },
-    { name:'Unknown Code',  time:'9:21 PM',  ok:false },
-    { name:'Vikram Singh',  time:'10:02 PM', ok:true  },
-  ]);
+  const [result,     setResult]     = useState(null);
+  const [stats,      setStats]      = useState({ scanned: 0, total: 0 });
+  const [recentList, setRecentList] = useState([]);
+
+  useEffect(() => {
+    // Fetch initial stats for the vendor
+    const fetchStats = async () => {
+      try {
+        const res = await api.get('/bookings');
+        if (res.data.success) {
+          const bookings = res.data.data;
+          const scanned = bookings.filter(b => b.status === 'completed').length;
+          setStats({ scanned, total: bookings.length });
+          setRecentList(bookings.filter(b => b.status === 'completed').slice(-5).reverse().map(b => ({
+            name: b.user?.name || 'Guest',
+            time: new Date(b.updatedAt).toLocaleTimeString(),
+            ok: true
+          })));
+        }
+      } catch (err) {
+        console.error('Failed to load scanner stats');
+      }
+    };
+    fetchStats();
+  }, []);
+
+  const handleVerify = async (val) => {
+    const t = val || code.trim();
+    if (!t) return;
+    
+    setScanning(true);
+    setResult(null);
+    try {
+      const res = await api.post('/bookings/verify', { code: t });
+      if (res.data.success) {
+        const booking = res.data.data;
+        setResult({ ok: true, booking: {
+          guest: booking.user?.name || 'Guest',
+          venue: booking.venue?.name,
+          type: booking.tickets.type,
+          guests: booking.tickets.count,
+          id: booking._id
+        }});
+        setStats(s => ({ ...s, scanned: s.scanned + 1 }));
+        pushRecent(booking.user?.name || 'Guest', true);
+        show(`✓ Verified: ${booking.user?.name}`, 'success');
+      }
+    } catch (err) {
+      setResult({ ok: false });
+      pushRecent('Unknown/Invalid', false);
+      show(err.response?.data?.message || 'Verification failed', 'danger');
+    } finally {
+      setScanning(false);
+      setCode('');
+    }
+  };
 
   const pushRecent = (name, ok) => {
     const time = new Date().toLocaleTimeString('en-IN', { hour:'2-digit', minute:'2-digit' });
     setRecentList(r => [{ name, time, ok }, ...r.slice(0, 7)]);
-  };
-
-  /* ── Camera scan simulation ── */
-  const doScan = () => {
-    if (scanning) return;
-    setScanning(true); setResult(null);
-    setTimeout(() => {
-      const booking = BOOKINGS[Math.floor(Math.random() * 3)];
-      setResult({ ok: true, booking });
-      setScanned(c => c + 1);
-      pushRecent(booking.guest, true);
-      show(`✓ ${booking.guest} — check-in successful!`);
-      setScanning(false);
-    }, 2000);
-  };
-
-  /* ── Manual code verify ── */
-  const verify = () => {
-    const t = code.trim();
-    setCode('');
-    if (t === 'INVALID' || (!CODE_MAP[t] && CODE_MAP[t] !== 0 && t !== '')) {
-      setResult({ ok: false });
-      pushRecent('Unknown Code', false);
-      show('Invalid code — booking not found.', 'error');
-    } else {
-      const idx = CODE_MAP[t] ?? 1;
-      const booking = BOOKINGS[idx];
-      setResult({ ok: true, booking });
-      setScanned(c => c + 1);
-      pushRecent(booking.guest, true);
-      show(`✓ ${booking.guest} — verified!`);
-    }
   };
 
   const reset = () => { setResult(null); setCode(''); };
@@ -73,9 +87,9 @@ export default function Scanner() {
 
       {/* Stats */}
       <div className="grid grid-cols-3 gap-4">
-        <StatCard icon="qr"      label="Scanned Tonight" value={scanned}        accent="green"  />
-        <StatCard icon="users"   label="Total Expected"  value={47}             accent="purple" />
-        <StatCard icon="⏳"       label="Remaining"       value={47 - scanned}   accent="gold"   />
+        <StatCard icon="qr"      label="Scanned Tonight" value={stats.scanned}        accent="green"  />
+        <StatCard icon="users"   label="Total Expected"  value={stats.total}          accent="purple" />
+        <StatCard icon="⏳"       label="Remaining"       value={Math.max(0, stats.total - stats.scanned)}   accent="gold"   />
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
@@ -108,7 +122,7 @@ export default function Scanner() {
                 </div>
               )}
               {scanning && (
-                <div className="absolute bottom-4 text-xs text-green font-semibold animate-pulse">Scanning…</div>
+                <div className="absolute bottom-4 text-xs text-green font-semibold animate-pulse">Verifying…</div>
               )}
               {result?.ok && (
                 <div className="flex flex-col items-center gap-3 animate-fade-up">
@@ -124,15 +138,15 @@ export default function Scanner() {
               )}
             </div>
 
-            {/* Main button */}
+            {/* Main button (simulation) */}
             <Button
               size="lg"
               fullWidth
               variant={result ? 'ghost-dark' : 'primary'}
               loading={scanning}
-              onClick={result ? reset : doScan}
+              onClick={result ? reset : () => handleVerify('DEMO_SCAN')}
             >
-              {scanning ? 'Scanning…' : result ? 'Scan Next Guest →' : (
+              {scanning ? 'Verifying…' : result ? 'Scan Next Guest →' : (
                 <><Icon name="qr" size={18} /> Tap to Scan QR</>
               )}
             </Button>
@@ -144,15 +158,11 @@ export default function Scanner() {
                 <input
                   value={code}
                   onChange={e => setCode(e.target.value)}
-                  onKeyDown={e => e.key === 'Enter' && verify()}
-                  placeholder="6-digit code"
-                  maxLength={6}
-                  className="input-base flex-1 font-mono tracking-[4px] text-center text-lg h-12"
+                  onKeyDown={e => e.key === 'Enter' && handleVerify()}
+                  placeholder="Enter 6-digit code or Booking ID"
+                  className="input-base flex-1 font-mono text-center text-sm h-12"
                 />
-                <Button size="md" onClick={verify} className="h-12 px-5">Verify</Button>
-              </div>
-              <div className="text-[10px] dark:text-dark-100 text-dark-400 mt-1.5">
-                Demo codes: <span className="font-mono">847291</span> · <span className="font-mono">392847</span> · <span className="font-mono">918273</span>
+                <Button size="md" onClick={() => handleVerify()} className="h-12 px-5">Verify</Button>
               </div>
             </div>
           </div>
@@ -196,7 +206,7 @@ export default function Scanner() {
           )}
 
           {/* Recent scans */}
-          <Card title="Recent Scans" subtitle={`${scanned} guests processed tonight`} noPad>
+          <Card title="Recent Scans" subtitle="Guests processed tonight" noPad>
             <div className="divide-y dark:divide-dark-400 divide-light-200">
               {recentList.map((s, i) => (
                 <div key={i} className="flex items-center justify-between px-5 py-3">
@@ -207,7 +217,7 @@ export default function Scanner() {
                       <div className="text-[11px] dark:text-dark-100 text-dark-400">{s.time}</div>
                     </div>
                   </div>
-                  <StatusPill status={s.ok ? 'Checked In' : 'Cancelled'} />
+                  <StatusPill status={s.ok ? 'Checked In' : 'Failed'} />
                 </div>
               ))}
             </div>
@@ -217,3 +227,4 @@ export default function Scanner() {
     </div>
   );
 }
+

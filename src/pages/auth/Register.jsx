@@ -52,8 +52,12 @@ export default function Register() {
     e.preventDefault();
     if (!form.agreed) { setErrors(er => ({ ...er, agreed: 'You must agree to continue' })); return; }
     const res = await register(form);
-    if (res.success) navigate('/vendor/dashboard');
+    if (res.success) {
+      const targetRole = res.user.role;
+      navigate(targetRole === 'admin' ? '/admin/dashboard' : '/vendor/dashboard');
+    }
   };
+
 
   return (
     <AuthShell title={step === 1 ? 'Create account' : 'Business details'} subtitle={step === 1 ? 'Join 200+ venues on NightOut' : 'Tell us about your venue'}>

@@ -1,100 +1,120 @@
-import { createContext, useContext, useState } from 'react';
+import { createContext, useContext, useState, useEffect } from 'react';
+import api from '../utils/api';
 
-// ── Demo credential sets ───────────────────────────────────────────────────
-const VENDOR_USERS = [
-  {
-    id: 'V001', name: 'Amit Kumar', email: 'vendor@nightout.in',
-    password: 'vendor123', role: 'vendor',
-    business: 'F Bar & Lounge', city: 'Jaipur', avatar: 'AK',
-    joined: 'Oct 2025', plan: 'Premium',
-  },
-  {
-    id: 'V002', name: 'Rohan Mehra', email: 'rohan@skyhosp.in',
-    password: 'vendor123', role: 'vendor',
-    business: 'Sky Hospitality', city: 'Delhi', avatar: 'RM',
-    joined: 'Nov 2025', plan: 'Growth',
-  },
-];
-
-const ADMIN_USERS = [
-  {
-    id: 'A001', name: 'Super Admin', email: 'admin@nightout.in',
-    password: 'admin123', role: 'admin',
-    avatar: 'SA', joined: 'Sep 2025',
-  },
-];
-
-// ── Context ────────────────────────────────────────────────────────────────
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(() => {
-    try {
-      const stored = localStorage.getItem('nightout-user');
-      return stored ? JSON.parse(stored) : null;
-    } catch { return null; }
-  });
-  const [error, setError]   = useState('');
-  const [loading, setLoading] = useState(false);
+  const [user, setUser] = useState(null);
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(true);
+
+  // ── Initial Auth Check ───────────────────────────────────────────────────
+  useEffect(() => {
+    const checkAuth = async () => {
+      const token = localStorage.getItem('nightout-token');
+      if (!token) {
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const res = await api.get('/auth/me');
+        if (res.data.success) {
+          setUser(res.data.data);
+        }
+      } catch (err) {
+        console.error('Auth check failed:', err);
+        localStorage.removeItem('nightout-token');
+        localStorage.removeItem('nightout-user');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    checkAuth();
+  }, []);
 
   /* Login ------------------------------------------------------------------ */
-  const login = async (email, password, role = 'vendor') => {
+  const login = async (email, password) => {
     setLoading(true);
     setError('');
-    await new Promise(r => setTimeout(r, 800)); // simulate network
 
-    const pool = role === 'admin' ? ADMIN_USERS : VENDOR_USERS;
-    const found = pool.find(
-      u => u.email.toLowerCase() === email.toLowerCase() && u.password === password
-    );
-
-    if (found) {
-      const userData = { ...found, role };
-      delete userData.password;
-      setUser(userData);
-      try { localStorage.setItem('nightout-user', JSON.stringify(userData)); } catch {}
+    try {
+      const res = await api.post('/auth/login', { email, password });
+      
+      if (res.data.success) {
+        const { token, user: userData } = res.data;
+        setUser(userData);
+        localStorage.setItem('nightout-token', token);
+        localStorage.setItem('nightout-user', JSON.stringify(userData));
+        setLoading(false);
+        return { success: true, user: userData };
+      }
+    } catch (err) {
+      const msg = err.response?.data?.message || 'Invalid email or password.';
+      setError(msg);
       setLoading(false);
-      return { success: true, user: userData };
+      return { success: false, message: msg };
     }
-
-    setError('Invalid email or password. Try the demo credentials.');
-    setLoading(false);
-    return { success: false };
   };
 
   /* Register --------------------------------------------------------------- */
   const register = async (formData) => {
     setLoading(true);
-    await new Promise(r => setTimeout(r, 1000));
+    setError('');
 
-    const userData = {
-      id: `V${Date.now()}`,
-      name: formData.name,
-      email: formData.email,
-      business: formData.businessName || '',
-      city: formData.city || '',
-      role: 'vendor',
-      plan: formData.plan || 'starter',
-      avatar: formData.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase(),
-      joined: new Date().toLocaleDateString('en-IN', { month: 'short', year: 'numeric' }),
-    };
+    try {
+      // Backend expects: name, email, password, role
+      const payload = {
+        name: formData.name,
+        email: formData.email,
+        password: formData.password,
+        role: formData.role || 'vendor'
+      };
 
-    setUser(userData);
-    try { localStorage.setItem('nightout-user', JSON.stringify(userData)); } catch {}
-    setLoading(false);
-    return { success: true, user: userData };
+      const res = await api.post('/auth/register', payload);
+
+      if (res.data.success) {
+        const { token, user: userData } = res.data;
+        setUser(userData);
+        localStorage.setItem('nightout-token', token);
+        localStorage.setItem('nightout-user', JSON.stringify(userData));
+        setLoading(false);
+        return { success: true, user: userData };
+      }
+    } catch (err) {
+      const msg = err.response?.data?.message || 'Registration failed.';
+      setError(msg);
+      setLoading(false);
+      return { success: false, message: msg };
+    }
   };
 
   /* Logout ----------------------------------------------------------------- */
   const logout = () => {
     setUser(null);
-    try { localStorage.removeItem('nightout-user'); } catch {}
+    localStorage.removeItem('nightout-token');
+    localStorage.removeItem('nightout-user');
+  };
+
+  /* Refresh User Profile -------------------------------------------------- */
+  const refreshUser = async () => {
+    try {
+      const res = await api.get('/auth/me');
+      if (res.data.success) {
+        setUser(res.data.data);
+        localStorage.setItem('nightout-user', JSON.stringify(res.data.data));
+      }
+    } catch (err) {
+      console.error('Failed to refresh user:', err);
+    }
   };
 
   return (
-    <AuthContext.Provider value={{ user, error, loading, login, register, logout, setError }}>
+    <AuthContext.Provider value={{ user, error, loading, login, register, logout, setError, refreshUser }}>
       {children}
     </AuthContext.Provider>
+
   );
 }
 
@@ -103,3 +123,4 @@ export const useAuth = () => {
   if (!ctx) throw new Error('useAuth must be inside AuthProvider');
   return ctx;
 };
+

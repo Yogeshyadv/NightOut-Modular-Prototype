@@ -3,26 +3,40 @@
 // ─────────────────────────────────────────────────────────────────────────────
 import { useState } from 'react';
 import {
-  StatCard, VenueCard, EmptyState, StatusPill, PageHeader,
+  StatCard, VenueCard, EmptyState, StatusPill, PageHeader, SkeletonCard,
   Button, Input, Textarea, Select, TagSelect, Modal, ConfirmModal, Icon,
 } from '../../components/ui/index.js';
 import { useToast }     from '../../hooks/useToast.js';
+import { useVenues }    from '../../hooks/useVenues.js';
 import { ToastContainer } from '../../components/ui/Toast.jsx';
-import { VENUES as SEED } from '../../data/mockData.js';
 import { fmt, cn }      from '../../utils/helpers.js';
+
 
 const GENRE_OPTIONS    = ['EDM','Commercial','Bollywood','Hip-Hop','House','Techno','Live Band','Retro','Sufi'];
 const AMENITY_OPTIONS  = ['Parking','Valet','Dance Floor','Rooftop','VIP Lounge','Hookah','Kitchen','Smoking Area','Gender-Neutral WC'];
 const CITY_OPTIONS     = ['Jaipur','Delhi','Mumbai','Bengaluru','Chennai','Hyderabad','Pune','Kolkata'];
-const CATEGORY_OPTIONS = ['Nightclub','Bar','Lounge','Rooftop Bar','Premium Club','Event Venue'];
+const CATEGORY_OPTIONS = ['Club', 'Lounge', 'Pub', 'Bar', 'Cafe', 'Other'];
 
 const BLANK = {
-  name:'', city:'Jaipur', location:'', category:'Nightclub', capacity:'',
-  stagPrice:'', couplePrice:'', femalePrice:'', openTime:'', dresscode:'', includes:'',
-  genre:[], amenities:[],
+  name: '', 
+  description: '',
+  city: 'Jaipur', 
+  location: '', 
+  category: 'Club', 
+  capacity: '',
+  stagPrice: '', 
+  couplePrice: '', 
+  femalePrice: '', 
+  openTime: '', 
+  dresscode: '', 
+  includes: '',
+  genre: [], 
+  amenities: [],
+  images: [],
 };
 
-function VenueForm({ initial, onSave, onClose }) {
+
+function VenueForm({ initial, onSave, onClose, loading }) {
   const [form, setForm] = useState({ ...BLANK, ...initial });
   const [errors, setErrors] = useState({});
 
@@ -32,6 +46,7 @@ function VenueForm({ initial, onSave, onClose }) {
   const validate = () => {
     const e = {};
     if (!form.name.trim())    e.name      = 'Venue name is required';
+    if (!form.description.trim()) e.description = 'Description is required';
     if (!form.location.trim())e.location  = 'Location is required';
     if (!form.stagPrice)      e.stagPrice = 'Stag price is required';
     setErrors(e);
@@ -53,7 +68,11 @@ function VenueForm({ initial, onSave, onClose }) {
           <Input label="Capacity"  type="number" placeholder="350" value={form.capacity} onChange={set('capacity')} />
           <Input label="Open Hours" placeholder="8:00 PM – 1:00 AM" value={form.openTime} onChange={set('openTime')} />
         </div>
+        <div className="mt-4">
+          <Textarea label="Description *" placeholder="Tell guests about your venue..." value={form.description} onChange={set('description')} error={errors.description} rows={3} />
+        </div>
       </section>
+
 
       {/* Pricing */}
       <section>
@@ -73,48 +92,118 @@ function VenueForm({ initial, onSave, onClose }) {
       <TagSelect label="Music Genres"       options={GENRE_OPTIONS}   selected={form.genre}     onChange={v => setV('genre', v)}     />
       <TagSelect label="Amenities"          options={AMENITY_OPTIONS} selected={form.amenities} onChange={v => setV('amenities', v)} accent="purple" />
 
+      {/* Image Gallery */}
+      <section>
+        <div className="label-xs text-dark-100 mb-3">Venue Gallery</div>
+        <div className="grid grid-cols-4 gap-3 mb-4">
+          {form.images?.map((url, i) => (
+            <div key={i} className="relative aspect-square rounded-xl overflow-hidden group">
+              <img src={url} className="w-full h-full object-cover" alt="" />
+              <button 
+                type="button"
+                onClick={() => setV('images', form.images.filter((_, idx) => idx !== i))}
+                className="absolute top-1 right-1 w-6 h-6 bg-danger/90 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+              >
+                <Icon name="x" size={12} />
+              </button>
+            </div>
+          ))}
+          
+          <label className="aspect-square rounded-xl border-2 border-dashed dark:border-dark-500 border-light-200 flex flex-col items-center justify-center dark:text-dark-100 text-dark-400 hover:border-green hover:text-green transition-all cursor-pointer">
+            <input 
+              type="file" 
+              className="hidden" 
+              accept="image/*" 
+              multiple 
+              onChange={async (e) => {
+                const files = Array.from(e.target.files);
+                const promises = files.map(file => {
+                  return new Promise((resolve) => {
+                    const reader = new FileReader();
+                    reader.onloadend = () => resolve(reader.result);
+                    reader.readAsDataURL(file);
+                  });
+                });
+                const base64s = await Promise.all(promises);
+                setV('images', [...(form.images || []), ...base64s]);
+              }}
+            />
+            <Icon name="plus" size={20} />
+            <span className="text-[10px] mt-1 font-bold text-center px-1">Upload Photos</span>
+          </label>
+        </div>
+      </section>
+
+
       {/* Actions */}
+
       <div className="flex justify-end gap-3 pt-2">
-        <Button variant="ghost-dark" size="md" onClick={onClose}>Cancel</Button>
-        <Button size="md" onClick={handleSave}>
-          {initial?.id ? 'Save Changes' : 'Create Venue'}
+        <Button variant="ghost-dark" size="md" onClick={onClose} disabled={loading}>Cancel</Button>
+        <Button size="md" onClick={handleSave} loading={loading}>
+          {initial?._id || initial?.id ? 'Save Changes' : 'Create Venue'}
         </Button>
       </div>
+
     </div>
   );
 }
 
 export default function Venues() {
+  const { venues, loading, createVenue, updateVenue, deleteVenue } = useVenues(true);
+
   const { toasts, show, dismiss } = useToast();
-  const [venues, setVenues] = useState(SEED.filter(v => v.vendorId === 'V001'));
+  
   const [editTarget,   setEditTarget]   = useState(null);   // venue obj or null
   const [addOpen,      setAddOpen]      = useState(false);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [view,         setView]         = useState('grid'); // 'grid' | 'list'
 
-  const saveVenue = (form) => {
+  const mapVenueToForm = (v) => {
+    if (!v) return BLANK;
+    return {
+      ...v,
+      category: Array.isArray(v.category) ? v.category[0] : v.category,
+      stagPrice: v.pricing?.stag || v.stagPrice || '',
+      couplePrice: v.pricing?.couple || v.couplePrice || '',
+      femalePrice: v.pricing?.vip || v.femalePrice || '',
+      description: v.description || '',
+      images: v.images || []
+    };
+  };
+
+
+  const handleEdit = (v) => {
+    setEditTarget(v);
+  };
+
+  const saveVenue = async (form) => {
+
+    // Transform data to match backend model
+    const payload = {
+      ...form,
+      category: [form.category], // Backend expects array
+      pricing: {
+        stag: Number(form.stagPrice),
+        couple: Number(form.couplePrice),
+        vip: Number(form.femalePrice || 0) // Mapping femalePrice to VIP for demo
+      }
+    };
+
     if (editTarget) {
-      setVenues(vs => vs.map(v => v.id === editTarget.id ? { ...v, ...form } : v));
-      show('Venue updated successfully!');
-      setEditTarget(null);
+      const res = await updateVenue(editTarget._id, payload);
+      if (res.success) setEditTarget(null);
     } else {
-      const newV = {
-        ...form, id: `VN00${Date.now()}`, vendorId:'V001', status:'Active',
-        rating:0, reviews:0, bookings:0, monthlyRevenue:0,
-        emoji:'🎆', gradientFrom:'#0d001a', gradientTo:'#1e0035',
-        created: new Date().toISOString(),
-      };
-      setVenues(vs => [...vs, newV]);
-      show('Venue created and listed on NightOut!');
-      setAddOpen(false);
+      const res = await createVenue(payload);
+      if (res.success) setAddOpen(false);
     }
   };
 
-  const confirmDelete = () => {
-    setVenues(vs => vs.filter(v => v.id !== deleteTarget.id));
-    show('Venue removed.', 'warning');
-    setDeleteTarget(null);
+
+  const confirmDelete = async () => {
+    const res = await deleteVenue(deleteTarget._id);
+    if (res.success) setDeleteTarget(null);
   };
+
 
   const totalRev      = venues.reduce((s, v) => s + v.monthlyRevenue, 0);
   const totalBookings = venues.reduce((s, v) => s + v.bookings, 0);
@@ -150,8 +239,12 @@ export default function Venues() {
         <StatCard icon="💰"       label="Monthly Revenue" value={fmt.shortCurrency(totalRev)}           accent="gold"   />
       </div>
 
-      {/* Empty state */}
-      {venues.length === 0 ? (
+      {/* Empty state & Loading */}
+      {loading ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+          {[1,2,3].map(i => <SkeletonCard key={i} />)}
+        </div>
+      ) : venues.length === 0 ? (
         <div className="dark:bg-dark-600 bg-white dark:border-dark-400 border-light-200 border rounded-3xl p-12">
           <EmptyState icon="🏢" title="No venues yet" subtitle="Add your first venue to start accepting bookings."
             action={<Button size="md" leftIcon="plus" onClick={() => setAddOpen(true)} className="mt-4">Add Your First Venue</Button>} />
@@ -160,12 +253,13 @@ export default function Venues() {
         /* Grid view */
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
           {venues.map(v => (
-            <VenueCard key={v.id} venue={v}
-              onEdit={() => setEditTarget(v)}
+            <VenueCard key={v._id || v.id} venue={v}
+              onEdit={() => handleEdit(v)}
               onDelete={() => setDeleteTarget(v)} />
           ))}
         </div>
       ) : (
+
         /* List / table view */
         <div className="dark:bg-dark-600 bg-white dark:border-dark-400 border-light-200 border rounded-2xl overflow-hidden">
           <table className="w-full min-w-max">
@@ -178,7 +272,8 @@ export default function Venues() {
             </thead>
             <tbody>
               {venues.map(v => (
-                <tr key={v.id} className="border-b dark:border-dark-400/50 border-light-200/70 last:border-0 hover:dark:bg-dark-500/40 hover:bg-light-50 transition-colors">
+                <tr key={v._id || v.id} className="border-b dark:border-dark-400/50 border-light-200/70 last:border-0 hover:dark:bg-dark-500/40 hover:bg-light-50 transition-colors">
+
                   <td className="px-5 py-4">
                     <div className="flex items-center gap-3">
                       <div className="w-9 h-9 rounded-xl flex items-center justify-center text-lg flex-shrink-0"
@@ -199,7 +294,7 @@ export default function Venues() {
                   <td className="px-5 py-4"><StatusPill status={v.status} /></td>
                   <td className="px-5 py-4">
                     <div className="flex gap-2">
-                      <Button size="xs" variant="ghost-dark" leftIcon="edit" onClick={() => setEditTarget(v)}>Edit</Button>
+                      <Button size="xs" variant="ghost-dark" leftIcon="edit" onClick={() => handleEdit(v)}>Edit</Button>
                       <Button size="xs" variant="danger"     leftIcon="trash" onClick={() => setDeleteTarget(v)}>Del</Button>
                     </div>
                   </td>
@@ -217,7 +312,13 @@ export default function Venues() {
         title={editTarget ? `Edit: ${editTarget.name}` : 'Add New Venue'}
         subtitle="Configure venue details and pricing"
         size="lg">
-        <VenueForm initial={editTarget ?? {}} onSave={saveVenue} onClose={() => { setAddOpen(false); setEditTarget(null); }} />
+        <VenueForm 
+          initial={mapVenueToForm(editTarget)} 
+          onSave={saveVenue} 
+          onClose={() => { setAddOpen(false); setEditTarget(null); }} 
+          loading={loading}
+        />
+
       </Modal>
 
       {/* Delete confirm */}

@@ -14,6 +14,8 @@ import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom
 import { useAuth }       from './context/AuthContext.jsx';
 import { ThemeProvider } from './context/ThemeContext.jsx';
 import { AuthProvider }  from './context/AuthContext.jsx';
+import ErrorBoundary     from './components/ErrorBoundary.jsx';
+
 
 // ── Layouts ───────────────────────────────────────────────────────────────────
 import PublicLayout    from './components/layouts/PublicLayout.jsx';
@@ -23,9 +25,13 @@ import DashboardLayout from './components/layouts/DashboardLayout.jsx';
 import Landing  from './pages/public/Landing.jsx';
 import Features from './pages/public/Features.jsx';
 import Pricing  from './pages/public/Pricing.jsx';
+import Discovery from './pages/public/Discovery.jsx';
+import VenueDetail from './pages/public/VenueDetail.jsx';
+import UserDashboard from './pages/public/UserDashboard.jsx';
 import {
   About, Contact, Help, Terms, Privacy, NotFound,
 } from './pages/public/OtherPages.jsx';
+
 
 // ── Auth pages ────────────────────────────────────────────────────────────────
 import Login          from './pages/auth/Login.jsx';
@@ -40,7 +46,10 @@ import VGuests        from './pages/vendor/Guests.jsx';
 import VAnalytics     from './pages/vendor/Analytics.jsx';
 import VScanner       from './pages/vendor/Scanner.jsx';
 import VNotifications from './pages/vendor/Notifications.jsx';
+import VWallet        from './pages/vendor/Wallet.jsx';
 import VSettings      from './pages/vendor/Settings.jsx';
+
+import VVerification  from './pages/vendor/Verification.jsx';
 
 // ── Admin pages ───────────────────────────────────────────────────────────────
 import ADashboard    from './pages/admin/Dashboard.jsx';
@@ -49,7 +58,10 @@ import AVendors      from './pages/admin/Vendors.jsx';
 import AUsers        from './pages/admin/Users.jsx';
 import ABookings     from './pages/admin/Bookings.jsx';
 import ARevenue      from './pages/admin/Revenue.jsx';
+import APayouts      from './pages/admin/Payouts.jsx';
 import AModeration   from './pages/admin/Moderation.jsx';
+
+import AVerifications from './pages/admin/Verifications.jsx';
 import ASettings     from './pages/admin/Settings.jsx';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -117,7 +129,32 @@ export default function App() {
     <BrowserRouter>
       <ThemeProvider>
         <AuthProvider>
-          <Routes>
+          <AppContent />
+        </AuthProvider>
+      </ThemeProvider>
+    </BrowserRouter>
+  );
+}
+
+function AppContent() {
+  const { loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center dark:bg-dark-900 bg-light-50">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-12 h-12 border-4 border-green/20 border-t-green rounded-full animate-spin" />
+          <div className="font-display font-bold text-xl animate-pulse">Night<span className="text-green">Out</span></div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <ErrorBoundary>
+      <Routes>
+
+
 
             {/* ══════════════════════════════════════════
                 PUBLIC ROUTES  (no auth required)
@@ -126,7 +163,10 @@ export default function App() {
               <Route path="/"         element={<Landing  />} />
               <Route path="/features" element={<Features />} />
               <Route path="/pricing"  element={<Pricing  />} />
+              <Route path="/discovery" element={<Discovery />} />
+              <Route path="/venue/:id" element={<VenueDetail />} />
               <Route path="/about"    element={<About    />} />
+
               <Route path="/contact"  element={<Contact  />} />
               <Route path="/help"     element={<Help     />} />
               <Route path="/terms"    element={<Terms    />} />
@@ -156,7 +196,11 @@ export default function App() {
                 <Route path="/vendor/analytics"         element={<VAnalytics     />} />
                 <Route path="/vendor/scanner"           element={<VScanner       />} />
                 <Route path="/vendor/notifications"     element={<VNotifications />} />
+                <Route path="/vendor/wallet"            element={<VWallet        />} />
+                <Route path="/vendor/verification"      element={<VVerification  />} />
+
                 <Route path="/vendor/settings"          element={<VSettings      />} />
+
                 {/* Catch unknown vendor sub-routes */}
                 <Route path="/vendor/*"                 element={<Navigate to="/vendor/dashboard" replace />} />
               </Route>
@@ -175,21 +219,34 @@ export default function App() {
                 <Route path="/admin/users"              element={<AUsers      />} />
                 <Route path="/admin/bookings"           element={<ABookings   />} />
                 <Route path="/admin/revenue"            element={<ARevenue    />} />
+                <Route path="/admin/payouts"            element={<APayouts    />} />
                 <Route path="/admin/moderation"         element={<AModeration />} />
+
+                <Route path="/admin/verifications"      element={<AVerifications />} />
                 <Route path="/admin/settings"           element={<ASettings   />} />
+
                 {/* Catch unknown admin sub-routes */}
                 <Route path="/admin/*"                  element={<Navigate to="/admin/dashboard" replace />} />
               </Route>
             </Route>
 
             {/* ══════════════════════════════════════════
+                GUEST PORTAL  (role: user)
+            ══════════════════════════════════════════ */}
+            <Route element={<PrivateRoute role="user" />}>
+              <Route path="/profile"   element={<UserDashboard />} />
+            </Route>
+
+
+            {/* ══════════════════════════════════════════
                 404 CATCH-ALL
             ══════════════════════════════════════════ */}
             <Route path="*" element={<NotFound />} />
 
+
           </Routes>
-        </AuthProvider>
-      </ThemeProvider>
-    </BrowserRouter>
+    </ErrorBoundary>
   );
 }
+
+

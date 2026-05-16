@@ -9,30 +9,26 @@ import {
 import { useToast }     from '../../hooks/useToast.js';
 import { ToastContainer } from '../../components/ui/Toast.jsx';
 import { useAuth }      from '../../context/AuthContext.jsx';
-import { VENDOR_INFO }  from '../../data/mockData.js';
-
-// Import VENDOR_INFO — fallback to inline if not in mockData yet
-const VI = {
-  name:'Amit Kumar', email:'amit@fbar.in', phone:'+91 98765 00001',
-  businessName:'F Bar & Lounge', city:'Jaipur', address:'MI Road, Jaipur, Rajasthan 302001',
-  joined:'Oct 2025', plan:'Premium', commissionRate:5, totalVenues:2, rating:4.5,
-  ...VENDOR_INFO,
-};
-
 const CITY_OPTIONS = ['Jaipur','Delhi','Mumbai','Bengaluru','Chennai','Hyderabad','Pune','Kolkata'];
 
 export default function VendorSettings() {
+
   const { user } = useAuth();
   const { toasts, show, dismiss } = useToast();
 
+  const joinedDate = user?.createdAt 
+    ? new Date(user.createdAt).toLocaleDateString('en-IN', { month: 'short', year: 'numeric' })
+    : 'Oct 2025';
+
   const [profile, setProfile] = useState({
-    name:         user?.name         ?? VI.name,
-    email:        user?.email        ?? VI.email,
-    phone:                              VI.phone,
-    businessName: user?.business     ?? VI.businessName,
-    city:         user?.city         ?? VI.city,
-    address:                            VI.address,
+    name:         user?.name         ?? '',
+    email:        user?.email        ?? '',
+    phone:        user?.phone        ?? '+91 98765 00000',
+    businessName: user?.business     ?? 'My Business',
+    city:         user?.city         ?? 'Jaipur',
+    address:      user?.address      ?? 'MI Road, Jaipur',
   });
+
 
   const [notifs, setNotifs] = useState({
     newBooking:      true,
@@ -98,15 +94,16 @@ export default function VendorSettings() {
         </div>
       </Card>
 
+
       {/* ── Account info ── */}
       <Card title="Account Details">
-        <InfoRow label="Vendor ID"       value={VI.id ?? 'V001'}               />
-        <InfoRow label="Member Since"    value={VI.joined}                      />
-        <InfoRow label="Plan"            value={VI.plan}   valueClassName="text-gold"          />
-        <InfoRow label="Commission Rate" value={`${VI.commissionRate}%`} valueClassName="text-purple-light" />
-        <InfoRow label="Total Venues"    value={VI.totalVenues}                 />
-        <InfoRow label="Overall Rating"  value={`⭐ ${VI.rating}`} valueClassName="text-gold"  />
+        <InfoRow label="Vendor ID"       value={user?._id?.slice(-8).toUpperCase() || '—'}    />
+        <InfoRow label="Member Since"    value={joinedDate}                                   />
+        <InfoRow label="Plan"            value="Verified Vendor"   valueClassName="text-gold" />
+        <InfoRow label="Commission Rate" value="15%"               valueClassName="text-purple-light" />
+        <InfoRow label="Account Type"    value={user?.role?.toUpperCase()}                     />
       </Card>
+
 
       {/* ── Notifications ── */}
       <Card>

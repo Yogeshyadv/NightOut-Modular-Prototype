@@ -1,33 +1,51 @@
 // ─────────────────────────────────────────────────────────────────────────────
 //  Vendor Notifications
 // ─────────────────────────────────────────────────────────────────────────────
-import { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { PageHeader, Button, Icon } from '../../components/ui/index.js';
 import { cn }                        from '../../utils/helpers.js';
-
-const INITIAL = [
-  { id:'N1', type:'booking', icon:'🎟️', title:'New booking: Rahul Sharma',          sub:'F Bar & Lounge · Stag · ₹1,629',                                  time:'2 min ago',   unread:true,  color:'#00C853' },
-  { id:'N2', type:'review',  icon:'⭐',  title:'Priya M. gave you 5 stars',           sub:'"Best club in Jaipur. Rainbow badge actually means something."',   time:'1 hr ago',   unread:true,  color:'#FFD740' },
-  { id:'N3', type:'alert',   icon:'⚠️', title:'Pricing not set for Friday night',   sub:"Update this weekend's pricing before Thursday 5 PM to avoid gaps.", time:'3 hr ago',   unread:false, color:'#FF6D00' },
-  { id:'N4', type:'booking', icon:'🎟️', title:'Table booking: Karan Malhotra + 5',   sub:'Skybar 22 · VIP Table · ₹28,000',                                  time:'5 hr ago',   unread:false, color:'#00C853' },
-  { id:'N5', type:'system',  icon:'🔔', title:'Rainbow certification renewal due',   sub:'Schedule your annual inclusivity audit within the next 28 days.',   time:'1 day ago',  unread:false, color:'#9C6FFF' },
-  { id:'N6', type:'booking', icon:'🎟️', title:'No-show: Dev Kapoor',                 sub:'F Bar & Lounge · Couple · Auto-flagged at 11:30 PM',               time:'1 day ago',  unread:false, color:'#FF5252' },
-  { id:'N7', type:'review',  icon:'⭐',  title:'Arjun K. left a 4-star review',       sub:'"Great vibe, the crowd level meter is super accurate."',            time:'2 days ago', unread:false, color:'#FFD740' },
-  { id:'N8', type:'system',  icon:'📊', title:'Weekly summary ready',                sub:'This week: 48 bookings · ₹95K revenue · 91% check-in rate',         time:'3 days ago', unread:false, color:'#00E5FF' },
-];
-
-const TYPE_OPTIONS = ['all','booking','review','alert','system'];
+import { useNotifications } from '../../hooks/useNotifications.js';
 
 export default function Notifications() {
-  const [items,  setItems]  = useState(INITIAL);
+  const { notifications, unreadCount, markRead, markAllRead, loading } = useNotifications();
   const [filter, setFilter] = useState('all');
 
-  const visible = filter === 'all' ? items : items.filter(n => n.type === filter);
-  const unreadCount = items.filter(n => n.unread).length;
+  // Mark all as read when visiting the page
+  useEffect(() => {
+    if (notifications.length > 0) {
+      markAllRead();
+    }
+  }, [notifications.length, markAllRead]);
 
-  const markAllRead = () => setItems(ns => ns.map(n => ({ ...n, unread:false })));
-  const dismiss     = (id) => setItems(ns => ns.filter(n => n.id !== id));
-  const markRead    = (id) => setItems(ns => ns.map(n => n.id === id ? { ...n, unread:false } : n));
+  const getIcon = (type) => {
+    if (type.includes('approved')) return '✅';
+    if (type.includes('rejected')) return '❌';
+    if (type.includes('verification')) return '🛡️';
+    if (type.includes('booking')) return '🎟️';
+    return '🔔';
+  };
+
+  const getColor = (type) => {
+    if (type.includes('approved')) return '#00C853';
+    if (type.includes('rejected')) return '#FF5252';
+    if (type.includes('verification')) return '#7C4DFF';
+    return '#6B6B80';
+  };
+
+  const visible = filter === 'all' 
+    ? notifications 
+    : notifications.filter(n => n.type.toLowerCase().includes(filter.toLowerCase()));
+
+  if (loading && notifications.length === 0) {
+    return (
+      <div className="p-6 space-y-6 animate-fade-up">
+        <PageHeader title="Notifications" subtitle="Alerts and platform updates" />
+        <div className="h-64 shimmer dark:bg-dark-600 bg-white rounded-3xl" />
+      </div>
+    );
+  }
+
+  const FILTER_OPTIONS = ['all', 'verification', 'booking'];
 
   return (
     <div className="p-6 space-y-6 animate-fade-up">
@@ -45,20 +63,20 @@ export default function Notifications() {
 
       {/* Unread banner */}
       {unreadCount > 0 && (
-        <div className="flex items-center gap-2.5 px-4 py-3 dark:bg-dark-700 bg-white dark:border-dark-500 border-light-200 border rounded-xl text-sm font-semibold text-green">
-          <span className="w-2 h-2 bg-green rounded-full animate-blink" />
+        <div className="flex items-center gap-2.5 px-4 py-3 dark:bg-dark-700 bg-white dark:border-dark-500 border-light-200 border rounded-xl text-sm font-semibold text-green shadow-sm">
+          <span className="w-2.5 h-2.5 bg-green rounded-full animate-blink" />
           {unreadCount} unread notification{unreadCount !== 1 ? 's' : ''}
         </div>
       )}
 
       {/* Type filter */}
       <div className="flex gap-2 flex-wrap">
-        {TYPE_OPTIONS.map(t => (
+        {FILTER_OPTIONS.map(t => (
           <button key={t} onClick={() => setFilter(t)}
             className={cn(
-              'px-4 py-2 rounded-xl text-sm font-semibold capitalize transition-all',
+              'px-4 py-2 rounded-xl text-sm font-semibold capitalize transition-all duration-200',
               filter === t
-                ? 'bg-green text-black shadow-green'
+                ? 'bg-green text-black shadow-lg shadow-green/20'
                 : 'dark:bg-dark-600 bg-white dark:border-dark-400 border-light-200 border dark:text-dark-100 text-dark-400 hover:text-green',
             )}>
             {t === 'all' ? 'All' : t}
@@ -69,43 +87,44 @@ export default function Notifications() {
       {/* Notification list */}
       <div className="space-y-3">
         {visible.length === 0 && (
-          <div className="dark:bg-dark-600 bg-white dark:border-dark-400 border-light-200 border rounded-2xl p-12 text-center">
-            <div className="text-4xl mb-3 opacity-40">🔔</div>
-            <div className="text-sm font-semibold dark:text-dark-100 text-dark-400">No {filter !== 'all' ? filter : ''} notifications</div>
-          </div>
+          <Card className="p-12 text-center">
+            <div className="text-4xl mb-4 opacity-30">🔔</div>
+            <div className="text-sm font-bold dark:text-dark-100 text-dark-400">No {filter !== 'all' ? filter : ''} notifications found</div>
+            <div className="text-xs opacity-50 mt-1 text-dark-300">We'll alert you here when something happens.</div>
+          </Card>
         )}
 
         {visible.map(n => (
-          <div key={n.id}
+          <div key={n._id}
             className={cn(
               'flex items-start gap-4 p-4 dark:bg-dark-600 bg-white dark:border-dark-400 border-light-200 border rounded-2xl',
-              'hover:dark:border-dark-300 hover:border-light-300 transition-all group cursor-pointer',
-              n.unread && 'dark:bg-dark-600/80',
+              'hover:dark:border-dark-300 hover:border-light-300 transition-all group cursor-pointer relative overflow-hidden',
+              !n.isRead && 'dark:bg-dark-500 bg-light-50',
             )}
-            onClick={() => markRead(n.id)}>
+            onClick={() => markRead(n._id)}>
+            
+            {!n.isRead && (
+              <div className="absolute top-0 left-0 w-1 h-full bg-green" />
+            )}
 
             {/* Icon */}
-            <div className="w-11 h-11 rounded-xl flex items-center justify-center text-xl flex-shrink-0"
-              style={{ background:`${n.color}18`, border:`1px solid ${n.color}28` }}>
-              {n.icon}
+            <div className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl flex-shrink-0 shadow-inner"
+              style={{ background:`${getColor(n.type)}12`, border:`1px solid ${getColor(n.type)}22` }}>
+              {getIcon(n.type)}
             </div>
 
             {/* Content */}
             <div className="flex-1 min-w-0">
-              <div className="text-sm font-semibold mb-0.5">{n.title}</div>
-              <div className="text-xs dark:text-dark-100 text-dark-400 leading-relaxed">{n.sub}</div>
-              <div className="text-[10px] dark:text-dark-200 text-dark-300 mt-1.5">{n.time}</div>
+              <div className="flex items-center justify-between mb-1">
+                <div className="text-sm font-bold dark:text-white text-dark-900 truncate pr-4">{n.title}</div>
+                <div className="text-[10px] dark:text-dark-400 text-dark-300 whitespace-nowrap">{new Date(n.createdAt).toLocaleDateString()}</div>
+              </div>
+              <div className="text-xs dark:text-dark-100 text-dark-400 leading-relaxed line-clamp-2">{n.message}</div>
             </div>
 
-            {/* Right */}
-            <div className="flex items-center gap-2 flex-shrink-0">
-              {n.unread && <span className="w-2 h-2 bg-green rounded-full" />}
-              <button
-                onClick={e => { e.stopPropagation(); dismiss(n.id); }}
-                className="opacity-0 group-hover:opacity-100 transition-opacity text-dark-100 hover:text-danger p-1"
-              >
-                <Icon name="x" size={12} />
-              </button>
+            {/* Unread indicator */}
+            <div className="flex items-center flex-shrink-0 self-center">
+              {!n.isRead && <span className="w-2.5 h-2.5 bg-green rounded-full shadow-glow" />}
             </div>
           </div>
         ))}
@@ -113,3 +132,10 @@ export default function Notifications() {
     </div>
   );
 }
+
+// Internal Card fallback to avoid import issues if not in index
+const Card = ({ children, className = '' }) => (
+  <div className={cn("dark:bg-dark-600 bg-white dark:border-dark-400 border-light-200 border rounded-2xl", className)}>
+    {children}
+  </div>
+);

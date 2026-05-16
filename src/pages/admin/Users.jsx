@@ -8,27 +8,37 @@ import {
 import Table            from '../../components/ui/Table.jsx';
 import { useToast }     from '../../hooks/useToast.js';
 import { ToastContainer } from '../../components/ui/Toast.jsx';
-import { PLATFORM_USERS, BOOKINGS } from '../../data/mockData.js';
 import { fmt }          from '../../utils/helpers.js';
 
+
+import { useAdminUsers } from '../../hooks/useAdminData.js';
+
 export default function AdminUsers() {
+  const { users: rawUsers, loading } = useAdminUsers();
   const { toasts, show, dismiss } = useToast();
-  const [users,    setUsers]    = useState(PLATFORM_USERS);
   const [selected, setSelected] = useState(null);
   const [confirm,  setConfirm]  = useState(null);
 
-  const act = (user, action) => {
-    const statusMap = { block:'Blocked', unblock:'Active', flag:'Flagged' };
-    setUsers(us => us.map(u => u.id === user.id ? { ...u, status: statusMap[action] } : u));
-    const msgs = { block:`${user.name} blocked.`, unblock:`${user.name} restored to active.`, flag:`${user.name} flagged for review.` };
-    show(msgs[action], action === 'unblock' ? 'success' : action === 'flag' ? 'warning' : 'error');
-    setSelected(null); setConfirm(null);
+  const statusMap = {
+    active: 'Active',
+    blocked: 'Blocked',
+    flagged: 'Flagged'
   };
 
-  // bookings belonging to selected user
-  const userBookings = selected
-    ? BOOKINGS.filter(b => b.guest.toLowerCase().includes(selected.name.split(' ')[0].toLowerCase()))
-    : [];
+  const users = rawUsers.map(u => ({
+    ...u,
+    id: u._id,
+    bookings: u.bookingCount || 0,
+    spent: u.totalSpent || 0,
+    status: statusMap[u.status] || 'Active',
+    joined: new Date(u.createdAt).toLocaleDateString('en-IN', { month: 'short', year: 'numeric' }),
+    lastSeen: 'Recently'
+  }));
+
+  const act = (user, action) => {
+    show(`Action "${action}" on ${user.name} will be implemented with the User update API.`, 'info');
+    setSelected(null); setConfirm(null);
+  };
 
   const columns = [
     {
@@ -43,12 +53,10 @@ export default function AdminUsers() {
         </div>
       ),
     },
-    { key:'city',     label:'City',      render: v => <span className="dark:text-dark-100 text-dark-400">{v}</span> },
     { key:'joined',   label:'Joined',    render: v => <span className="dark:text-dark-100 text-dark-400 text-xs">{v}</span> },
     { key:'bookings', label:'Bookings',  sortable:true, render: v => <span className="font-bold">{v}</span> },
     { key:'spent',    label:'Spent',     sortable:true, render: v => <span className="font-bold text-green">{fmt.currency(v)}</span> },
-    { key:'lastSeen', label:'Last Seen', render: v => <span className="dark:text-dark-100 text-dark-400 text-xs">{v}</span> },
-    { key:'status',   label:'Status' },
+    { key:'status',   label:'Status',    render: v => <StatusPill status={v} /> },
   ];
 
   return (
@@ -66,13 +74,10 @@ export default function AdminUsers() {
       <Table
         data={users}
         columns={columns}
+        loading={loading}
         searchable
-        searchPlaceholder="Search by name, email, phone, city…"
-        searchKeys={['name','email','phone','city']}
-        filters={[
-          { key:'status', label:'All Status', options:['Active','Flagged','Blocked'].map(s=>({value:s,label:s})) },
-          { key:'city',   label:'All Cities', options:['Jaipur','Delhi','Mumbai','Bengaluru','Hyderabad'].map(c=>({value:c,label:c})) },
-        ]}
+        searchPlaceholder="Search by name, email…"
+        searchKeys={['name','email']}
         onRowClick={setSelected}
         rowActions={row => (
           <div className="flex gap-1.5">
@@ -86,17 +91,16 @@ export default function AdminUsers() {
       />
 
       {/* Detail modal */}
-      <Modal open={!!selected} onClose={() => setSelected(null)} title="User Profile" subtitle={`ID: ${selected?.id}`} size="lg">
+      <Modal open={!!selected} onClose={() => setSelected(null)} title="User Profile" subtitle={`ID: ${selected?._id}`} size="lg">
         {selected && (
           <div className="space-y-4">
             <div className="flex items-center gap-4 p-4 dark:bg-dark-700 bg-light-50 dark:border-dark-500 border-light-200 border rounded-2xl">
               <Avatar name={selected.name} size={52} accent="green" />
               <div>
                 <div className="font-display text-lg font-bold">{selected.name}</div>
-                <div className="text-sm dark:text-dark-100 text-dark-400">{selected.email} · {selected.city}</div>
+                <div className="text-sm dark:text-dark-100 text-dark-400">{selected.email}</div>
                 <div className="mt-1.5 flex items-center gap-2">
                   <StatusPill status={selected.status} />
-                  <span className="text-xs dark:text-dark-100 text-dark-400">Last seen {selected.lastSeen}</span>
                 </div>
               </div>
             </div>
@@ -104,25 +108,13 @@ export default function AdminUsers() {
             <div className="grid grid-cols-2 gap-3">
               <div className="dark:bg-dark-700 bg-light-50 dark:border-dark-500 border-light-200 border rounded-2xl p-4">
                 <div className="label-xs text-dark-100 mb-3">Account Info</div>
-                <InfoRow label="Phone"      value={selected.phone}  />
-                <InfoRow label="City"       value={selected.city}   />
                 <InfoRow label="Joined"     value={selected.joined} />
                 <InfoRow label="Bookings"   value={selected.bookings} />
                 <InfoRow label="Total Spent" value={fmt.currency(selected.spent)} valueClassName="text-green" />
               </div>
               <div className="dark:bg-dark-700 bg-light-50 dark:border-dark-500 border-light-200 border rounded-2xl p-4">
-                <div className="label-xs text-dark-100 mb-3">Recent Bookings</div>
-                {userBookings.length > 0 ? userBookings.slice(0,4).map(b => (
-                  <div key={b.id} className="py-2 border-b dark:border-dark-500 border-light-200 last:border-0">
-                    <div className="text-xs font-semibold">{b.venue}</div>
-                    <div className="flex justify-between text-[10px] dark:text-dark-100 text-dark-400 mt-0.5">
-                      <span>{b.date}</span>
-                      <span className="text-green">{fmt.currency(b.amount)}</span>
-                    </div>
-                  </div>
-                )) : (
-                  <div className="text-xs dark:text-dark-100 text-dark-400 py-4 text-center">No recent bookings</div>
-                )}
+                <div className="label-xs text-dark-100 mb-3">Recent Activity</div>
+                <div className="text-xs dark:text-dark-100 text-dark-400 py-4 text-center">Recent booking history integration coming soon.</div>
               </div>
             </div>
 
@@ -147,3 +139,4 @@ export default function AdminUsers() {
     </div>
   );
 }
+
